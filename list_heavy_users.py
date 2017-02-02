@@ -51,11 +51,11 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
         types = 'all'
     
     params = {
-        'token': token
-        ,'ts_to': int(time.time()) - before_n_days * 24 * 60 * 60
-        ,'ts_from': 0
-        ,'count': 1000
-        ,'types': types
+        'token': token,
+        'ts_to': int(time.time()) - before_n_days * 24 * 60 * 60,
+        'ts_from': 0,
+        'count': 1000,
+        'types': types,
     }
     if user_id != '':
         params['user'] = user_id
