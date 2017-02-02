@@ -63,7 +63,7 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
     pages_num = json.loads(response.text)['paging']['pages']
     
     result_files = []
-    for i in range(pages_num):
+    for i in range(1, pages_num+1):
         params['page'] = i
         response = requests.get(uri, params=params)
         files = json.loads(response.text)['files']

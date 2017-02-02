@@ -65,7 +65,7 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
     pages_num = json.loads(response.text)['paging']['pages']
     
     result_files = []
-    for i in range(pages_num):
+    for i in range(1, pages_num+1):
         params['page'] = i
         response = requests.get(uri, params=params)
         files = json.loads(response.text)['files']
@@ -101,4 +101,5 @@ sorted_user_size = sorted(user_size_dict.items(), key=lambda x:x[1], reverse=Tru
 
 for i, user_size in enumerate(sorted_user_size):
     name = check_nick(user_size[0])
-    print('%2d위 : %15s\t%d' % (i+1, name, user_size[1]))
+    size = user_size[1] / 1024 / 1024
+    print('%2d위 : %15s\t%3dMB' % (i+1, name, size))
