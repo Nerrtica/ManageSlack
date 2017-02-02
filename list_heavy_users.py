@@ -14,17 +14,16 @@ def get_user_list():
     response = requests.get(uri, params=params)
     return json.loads(response.text)['members']
 
-def check_id(nick='nothing'):
-    users = get_user_list()
-    for user in users:
+def check_id(nick, user_list):
+    for user in user_list:
         if user['name'] == nick:
             return user['id']
     print('no such user')
     return None
 
-def check_nick(user_id):
+def check_nick(user_id, user_list):
     users = get_user_list()
-    for user in users:
+    for user in user_list:
         if user['id'] == user_id:
             return user['name']
     print('No such user')
@@ -100,6 +99,6 @@ for file in files:
 sorted_user_size = sorted(user_size_dict.items(), key=lambda x:x[1], reverse=True)
 
 for i, user_size in enumerate(sorted_user_size):
-    name = check_nick(user_size[0])
-    size = user_size[1] / 1024 / 1024
+    name = check_nick(user_size[0], users)
+    size = user_size[1] / 1048576
     print('%2d위 : %15s\t%3dMB' % (i+1, name, size))

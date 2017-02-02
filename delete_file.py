@@ -20,9 +20,8 @@ def get_user_list():
     response = requests.get(uri, params=params)
     return json.loads(response.text)['members']
 
-def check_id(nick='nothing'):
-    users = get_user_list()
-    for user in users:
+def check_id(nick, user_list):
+    for user in user_list:
         if user['name'] == nick:
             return user['id']
     print('no such user')
@@ -107,8 +106,8 @@ def delete_files(files):
         response = requests.get(uri, params=params)
         print (count, "of", num_files, "-", file['title'], json.loads(response.text)['ok'])
 
-
-userId = check_id(nickname)
+users = get_user_list()
+userId = check_id(nickname, users)
 if userId:
     print(nickname + '\'s ID is ' + userId)
 
