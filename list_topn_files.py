@@ -7,6 +7,7 @@ from collections import defaultdict
 token = ''
 # get top n size files
 topn = 50
+nickname = ''
 
 def get_user_list():
     params = {
@@ -90,8 +91,12 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
     
     return result_files
 
+if nickname != '':
+    user_id = check_id(nickname)
+else:
+    user_id = ''
 
-files = list_files(before_n_days=0, file_type='all', exclude_starred_items=False)
+files = list_files(before_n_days=0, user_id=user_id, file_type='all', exclude_starred_items=False)
 
 users = get_user_list()
 print(len(users))
