@@ -4,8 +4,6 @@ import json
 
 # get your token from here -> https://api.slack.com/docs/oauth-test-tokens
 token = ''
-# your slack nickname (not name!)
-nickname = ''
 # delete files uploaded before n days
 before_n_days = 1
 # file_type = all / spaces / snippets / images / videos / audios / gdocs / zips / pdfs
@@ -26,6 +24,15 @@ def check_id(nick, user_list):
             return user['id']
     print('no such user')
     return None
+
+def get_my_id_nick():
+    params = {
+        'token': token
+    }
+    uri = 'https://slack.com/api/auth.test'
+    response = requests.get(uri, params=params)
+    text = json.loads(response.text)
+    return (text['user_id'], text['user'])
 
 def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred_items=True):
     """
@@ -107,9 +114,7 @@ def delete_files(files):
         print (count, "of", num_files, "-", file['title'], json.loads(response.text)['ok'])
 
 users = get_user_list()
-userId = check_id(nickname, users)
-if userId:
-    print(nickname + '\'s ID is ' + userId)
+userId, nickname = get_my_id_nick()
 
 files = list_files(before_n_days=before_n_days, user_id=userId, file_type=file_type, exclude_starred_items=exclude_starred_items)
 print('import', len(files), 'files')
