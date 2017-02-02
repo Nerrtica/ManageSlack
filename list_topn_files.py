@@ -90,20 +90,6 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
     
     return result_files
 
-def delete_files(files):
-    count = 0
-    num_files = len(files)
-    for file in files:
-        count = count + 1
-        params = {
-            'token': token,
-            'file': file['id']
-        }
-
-        uri = 'https://slack.com/api/files.delete'
-        response = requests.get(uri, params=params)
-        print (count, "of", num_files, "-", file['title'], json.loads(response.text)['ok'])
-
 
 files = list_files(before_n_days=0, file_type='all', exclude_starred_items=False)
 
