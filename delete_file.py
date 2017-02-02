@@ -10,21 +10,6 @@ before_n_days = 1
 file_type = 'all'
 exclude_starred_items = True
 
-def get_user_list():
-    params = {
-        'token': token
-    }
-    uri = 'https://slack.com/api/users.list'
-    response = requests.get(uri, params=params)
-    return json.loads(response.text)['members']
-
-def check_id(nick, user_list):
-    for user in user_list:
-        if user['name'] == nick:
-            return user['id']
-    print('no such user')
-    return None
-
 def get_my_id_nick():
     params = {
         'token': token
@@ -113,7 +98,6 @@ def delete_files(files):
         response = requests.get(uri, params=params)
         print (count, "of", num_files, "-", file['title'], json.loads(response.text)['ok'])
 
-users = get_user_list()
 userId, nickname = get_my_id_nick()
 
 files = list_files(before_n_days=before_n_days, user_id=userId, file_type=file_type, exclude_starred_items=exclude_starred_items)
