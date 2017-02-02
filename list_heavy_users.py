@@ -92,7 +92,6 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
 files = list_files(before_n_days=0, file_type='all', exclude_starred_items=False)
 
 users = get_user_list()
-print(len(users))
 user_size_dict = defaultdict(lambda: 0)
 
 for file in files:
