@@ -7,6 +7,7 @@ from collections import defaultdict
 
 # get your token from here -> https://api.slack.com/docs/oauth-test-tokens
 token = ''
+blind_username = False
 
 def get_user_list():
     params = {
@@ -103,4 +104,7 @@ sorted_user_size = sorted(user_size_dict.items(), key=lambda x:x[1], reverse=Tru
 for i, user_size in enumerate(sorted_user_size):
     name = check_nick(user_size[0], users)
     size = user_size[1] / 1048576
-    print('%2d위 : %15s\t%3dMB' % (i+1, name, size))
+    if blind_username:
+        print('%2d위 : %15s\t%3dMB' % (i+1, name[0]+'.'+name[1:], size))
+    else:
+        print('%2d위 : %15s\t%3dMB' % (i+1, name, size))

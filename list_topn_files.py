@@ -10,6 +10,7 @@ token = ''
 # get top n size files
 topn = 50
 nickname = ''
+blind_username = False
 
 def get_user_list():
     params = {
@@ -111,4 +112,7 @@ sorted_file_size = sorted(file_size_dict.items(), key=lambda x:x[1][3], reverse=
 for i, file_size in enumerate(sorted_file_size[:topn]):
     name = check_nick(file_size[1][2], users)
     size = file_size[1][3] / 1048576
-    print('%2d위 : %15s\t%50s\t%3dMB' % (i+1, name, file_size[1][0], size))
+    if blind_username:
+        print('%2d위 : %15s\t%50s\t%3dMB' % (i+1, name[0]+'.'+name[1:], file_size[1][0], size))
+    else:
+        print('%2d위 : %15s\t%50s\t%3dMB' % (i+1, name, file_size[1][0], size))
