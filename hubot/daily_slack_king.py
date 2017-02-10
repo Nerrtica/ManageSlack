@@ -29,9 +29,12 @@ def get_user_list():
     return json.loads(response.text)['members']
 
 def count_to_dict(message_json, channel_count_dict):
-    ck1 = message_json['type'] == 'message'
-    ck2 = 'subtype' not in message_json.keys()
-    ck3 = 'bot_id' not in message_json.keys()
+    try:
+        ck1 = message_json['type'] == 'message'
+        ck2 = 'subtype' not in message_json.keys()
+        ck3 = 'bot_id' not in message_json.keys()
+    except KeyError:
+        return
     
     if ck1 and ck2 and ck3:
         if user_name[message_json['user']] == '':
