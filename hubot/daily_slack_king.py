@@ -33,13 +33,13 @@ def count_to_dict(message_json, channel_count_dict):
         ck1 = message_json['type'] == 'message'
         ck2 = 'subtype' not in message_json.keys()
         ck3 = 'bot_id' not in message_json.keys()
+        ck4 = user_name[message_json['user']] != ''
+    
+        if ck1 and ck2 and ck3 and ck4:
+            channel_count_dict[channel_name[message_json['channel']]][message_json['user']] += 1
+
     except KeyError:
         return
-    
-    if ck1 and ck2 and ck3:
-        if user_name[message_json['user']] == '':
-            return
-        channel_count_dict[channel_name[message_json['channel']]][user_name[message_json['user']]] += 1
 
 # channel list that will not compile statistics
 delete_channel_list = ['channel_name']
@@ -100,7 +100,8 @@ async def execute_bot(daily_dict):
                     bot_say += '오늘은 <#%s|%s> 채널의 채팅이 거의 없었네요. 많은 참여 부탁드립니다! :3\n' % (channel_id[channel], channel)
                 else:
                     bot_say += '오늘 <#%s|%s> 채널에서는 총 %d회의 채팅이 오갔어요!\n' % (channel_id[channel], channel, chat_count_sum)
-                    bot_say += '오늘의 <#%s|%s> 채널 슬랙왕은 %s입니다! %d회의 채팅을 하셨어요!\n' % (channel_id[channel], channel, ch_count[0][0][0]+'.'+ch_count[0][0][1:], ch_count[0][1])
+                    king_name = user_name[ch_count[0][0]]
+                    bot_say += '오늘의 <#%s|%s> 채널 슬랙왕은 %s입니다! %d회의 채팅을 하셨어요!\n' % (channel_id[channel], channel, king_name[0]+'.'+king_name[1:], ch_count[0][1])
                 bot_say += '\n(본인의 닉네임이 나오지 않기를 원하시는 분, 기타 피드백은 <@bot_master>에게 DM 주세요.)'
                 bot_say += '\n(특정 채널에서 오늘의 슬랙왕을 사용하시려면 <@bot_name>을 초대해주시고, 사용하지 않으시려면 내보내주세요.)'
                 
