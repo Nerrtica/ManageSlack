@@ -25,7 +25,6 @@ def check_id(nick, user_list):
     return None
 
 def check_nick(user_id, user_list):
-    users = get_user_list()
     for user in user_list:
         if user['id'] == user_id:
             return user['name']
