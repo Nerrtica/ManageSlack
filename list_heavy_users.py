@@ -89,21 +89,21 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
     
     return result_files
 
+if __name__ == '__main__':
+    files = list_files(before_n_days=0, file_type='all', exclude_starred_items=False)
 
-files = list_files(before_n_days=0, file_type='all', exclude_starred_items=False)
+    users = get_user_list()
+    user_size_dict = defaultdict(lambda: 0)
 
-users = get_user_list()
-user_size_dict = defaultdict(lambda: 0)
+    for file in files:
+        user_size_dict[file['user']] += file['size']
 
-for file in files:
-    user_size_dict[file['user']] += file['size']
+    sorted_user_size = sorted(user_size_dict.items(), key=lambda x:x[1], reverse=True)
 
-sorted_user_size = sorted(user_size_dict.items(), key=lambda x:x[1], reverse=True)
-
-for i, user_size in enumerate(sorted_user_size):
-    name = check_nick(user_size[0], users)
-    size = user_size[1] / 1048576
-    if blind_username:
-        print('%2d위 : %15s\t%3dMB' % (i+1, name[0]+'.'+name[1:], size))
-    else:
-        print('%2d위 : %15s\t%3dMB' % (i+1, name, size))
+    for i, user_size in enumerate(sorted_user_size):
+        name = check_nick(user_size[0], users)
+        size = user_size[1] / 1048576
+        if blind_username:
+            print('%2d위 : %15s\t%3dMB' % (i+1, name[0]+'.'+name[1:], size))
+        else:
+            print('%2d위 : %15s\t%3dMB' % (i+1, name, size))

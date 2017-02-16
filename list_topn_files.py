@@ -92,26 +92,28 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
     
     return result_files
 
-if nickname != '':
-    user_id = check_id(nickname)
-else:
-    user_id = ''
 
-files = list_files(before_n_days=0, user_id=user_id, file_type='all', exclude_starred_items=False)
-
-users = get_user_list()
-user_size_dict = defaultdict(lambda: 0)
-
-file_size_dict = defaultdict(lambda: ())
-for file in files:
-    file_size_dict[file['id']] = (file['title'], file['name'], file['user'], file['size'])
-    
-sorted_file_size = sorted(file_size_dict.items(), key=lambda x:x[1][3], reverse=True)
-
-for i, file_size in enumerate(sorted_file_size[:topn]):
-    name = check_nick(file_size[1][2], users)
-    size = file_size[1][3] / 1048576
-    if blind_username:
-        print('%2d위 : %15s\t%50s\t%3dMB' % (i+1, name[0]+'.'+name[1:], file_size[1][0], size))
+if __name__ == '__main__':
+    if nickname != '':
+        user_id = check_id(nickname)
     else:
-        print('%2d위 : %15s\t%50s\t%3dMB' % (i+1, name, file_size[1][0], size))
+        user_id = ''
+
+    files = list_files(before_n_days=0, user_id=user_id, file_type='all', exclude_starred_items=False)
+
+    users = get_user_list()
+    user_size_dict = defaultdict(lambda: 0)
+
+    file_size_dict = defaultdict(lambda: ())
+    for file in files:
+        file_size_dict[file['id']] = (file['title'], file['name'], file['user'], file['size'])
+        
+    sorted_file_size = sorted(file_size_dict.items(), key=lambda x:x[1][3], reverse=True)
+
+    for i, file_size in enumerate(sorted_file_size[:topn]):
+        name = check_nick(file_size[1][2], users)
+        size = file_size[1][3] / 1048576
+        if blind_username:
+            print('%2d위 : %15s\t%50s\t%3dMB' % (i+1, name[0]+'.'+name[1:], file_size[1][0], size))
+        else:
+            print('%2d위 : %15s\t%50s\t%3dMB' % (i+1, name, file_size[1][0], size))

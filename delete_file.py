@@ -100,9 +100,10 @@ def delete_files(files):
         response = requests.get(uri, params=params)
         print (count, "of", num_files, "-", file['title'], json.loads(response.text)['ok'])
 
-userId, nickname = get_my_id_nick()
+if __name__ == '__main__':
+    userId, nickname = get_my_id_nick()
 
-files = list_files(before_n_days=before_n_days, user_id=userId, file_type=file_type, exclude_starred_items=exclude_starred_items)
-print('import', len(files), 'files')
+    files = list_files(before_n_days=before_n_days, user_id=userId, file_type=file_type, exclude_starred_items=exclude_starred_items)
+    print('import', len(files), 'files')
 
-delete_files(files)
+    delete_files(files)

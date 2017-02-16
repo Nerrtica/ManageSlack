@@ -110,9 +110,10 @@ def backup_files(files, local_backup_path=''):
         except:
             print (count, "of", num_files, "-", file['title'], 'pass by error')
 
-userId, nickname = get_my_id_nick()
+if __name__ == '__main__':
+    userId, nickname = get_my_id_nick()
 
-files = list_files(before_n_days=before_n_days, user_id=userId, file_type=file_type)
-print('import', len(files), 'files')
+    files = list_files(before_n_days=before_n_days, user_id=userId, file_type=file_type)
+    print('import', len(files), 'files')
 
-backup_files(files, local_backup_path=local_backup_path)
+    backup_files(files, local_backup_path=local_backup_path)
