@@ -9,7 +9,17 @@
 * `before_n_days` 변수에 며칠이 지난 파일부터 지울 것인지 값을 설정합니다.
 * `file_type` 변수에 지울 파일의 타입을 설정합니다. (all / spaces / snippets / images / videos / audios / gdocs / zips / pdfs)
 * `exclude_starred_items` 변수에 누군가에게 Star된 아이템은 제외할지의 여부를 설정합니다.
-* `local_backup_path` *변수에 삭제하기 전 백업을 원한다면, 백업할 폴더의 path를 설정합니다.* (구현 예정)
+
+## backup_file.py
+
+특정 유저, 특정 포맷, 특정 용량의 오래된 파일을 한꺼번에 백업해주는 코드
+
+* `token` 변수에 발급받은 [토큰값](https://api.slack.com/docs/oauth-test-tokens)을 넣습니다.
+* `before_n_days` 변수에 며칠이 지난 파일부터 다운로드할 것인지 값을 설정합니다.
+* `file_type` 변수에 다운로드할 파일의 타입을 설정합니다. (all / spaces / snippets / images / videos / audios / gdocs / zips / pdfs)
+* `local_backup_path` 백업할 로컬 폴더의 path를 설정합니다.
+* `backup_min_size`와 `backup_max_size`에 KB 단위로 다운로드할 파일 용량의 범위를 설정합니다.
+ * `backup_max_size`에 0의 값을 설정할 경우, max size에 제한을 두지 않습니다.
 
 ## list_heavy_users.py
 
