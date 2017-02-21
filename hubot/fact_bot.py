@@ -13,11 +13,14 @@ class FactBot:
 
     """
 
-    def __init__(self, token, admin_name):
+    def __init__(self, token, admin_name, default_path):
         self.token = token
         self.slacker = Slacker(self.token)
+        self.default_path = default_path
         self.ignore_channel_list = []
+        self.load_ignore_channel_list()
         self.ignore_user_list = []
+        self.load_ignore_user_list()
         self.id = self.slacker.auth.test().body['user_id']
         self.admin_id = self.get_user_id(admin_name)
 
@@ -40,9 +43,11 @@ class FactBot:
             today = now.tm_mday
             error_count = 0
 
-            self.slacking_dict = FactBot.get_slacking_counts(day)
+            self.slacking_dict = self.get_slacking_counts(day)
+            self.slacker.chat.post_message('#_factbot_notice', self.hello_message, as_user=True)
 
             while True:
+
                 try:
                     if error_count > 10:
                         self.slacker.chat.post_message('#_factbot_notice', self.stop_message, as_user=True)
@@ -51,11 +56,6 @@ class FactBot:
 
                     message = await ws.recv()
                     message_json = json.loads(message)
-
-                    # Command Message
-                    command = FactBot.get_command(message_json)
-                    if command:
-                        self.react_command(message_json, command, day)
 
                     # Print Slacking
                     now = time.localtime()
@@ -68,8 +68,14 @@ class FactBot:
                         self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
                         error_count = 0
 
+                    # Command Message
+                    command = FactBot.get_command(message_json)
+                    if command:
+                        self.react_command(message_json, command, day)
+
                     # Slacking Count
-                    self.slacking_count(message_json)
+                    else:
+                        self.slacking_count(message_json)
 
                 except:
                     self.slacker.chat.post_message('#_factbot_notice', self.error_message, as_user=True)
@@ -116,7 +122,9 @@ class FactBot:
             raise TypeError
 
     def react_command(self, message_json, command, day):
-        if not self.get_channel_info(message_json.get('channel')).get('is_member', False):
+        if message_json.get('channel') in self.get_im_id_list():
+            pass
+        elif not self.get_channel_info(message_json.get('channel')).get('is_member', False):
             return
 
         if command == self.commands.get('help'):
@@ -163,6 +171,7 @@ class FactBot:
                 self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
 
         elif self.commands.get('stats') in command:
+
             if self.ignore_user_list.count(message_json.get('user')) != 0:
                 answer = '메시지 개수를 저장하지 않는 유저는 사용할 수 없는 기능이에요.'
                 self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
@@ -178,7 +187,7 @@ class FactBot:
                 channel_count_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
             elif command[len(self.commands.get('stats'))] == ' ' and \
-                 len(command[len(self.commands.get('stats'))+1]) == 8:
+                 len(command[len(self.commands.get('stats'))+1:]) == 8:
                 date = command[len(self.commands.get('stats'))+1:]
 
                 try:
@@ -194,7 +203,7 @@ class FactBot:
                         self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
                         return
 
-                    channel_count_dict = FactBot.get_slacking_counts(date)
+                    channel_count_dict = self.get_slacking_counts(date)
 
                 except:
                     answer = '제대로 된 포맷으로 적어주세요. <YYYYMMDD>'
@@ -261,17 +270,16 @@ class FactBot:
             self.slacker.chat.post_message(channel, bot_say, as_user=True)
 
     def save_slacking_counts(self, day):
-        with open('data/slacking_counts/'+day+'.log', 'w') as f:
+        with open(self.default_path+'data/slacking_counts/'+day+'.log', 'w') as f:
             for channel in self.slacking_dict.keys():
                 f.write('#%s\n' % channel)
                 for user in self.slacking_dict[channel].keys():
                     f.write('%s : %d\n' % (user, self.slacking_dict[channel][user]))
                 f.write('\n')
 
-    @staticmethod
-    def get_slacking_counts(day):
+    def get_slacking_counts(self, day):
         try:
-            with open('data/slacking_counts/'+day+'.log', 'r') as f:
+            with open(self.default_path+'data/slacking_counts/'+day+'.log', 'r') as f:
                 channel_count_dict = defaultdict(lambda: defaultdict(lambda: 0))
                 channel = ''
                 for line in f.readlines():
@@ -286,21 +294,21 @@ class FactBot:
             return defaultdict(lambda: defaultdict(lambda: 0))
 
     def save_ignore_channel_list(self):
-        with open('data/ignore_channel_list.txt', 'w') as f:
+        with open(self.default_path+'data/ignore_channel_list.txt', 'w') as f:
             for channel in self.ignore_channel_list:
                 f.write('%s\n' % channel)
 
     def load_ignore_channel_list(self):
-        with open('data/ignore_channel_list.txt', 'r') as f:
+        with open(self.default_path+'data/ignore_channel_list.txt', 'r') as f:
             self.ignore_channel_list = [line.strip() for line in f.readlines()]
 
     def save_ignore_user_list(self):
-        with open('data/ignore_user_list.txt', 'w') as f:
+        with open(self.default_path+'data/ignore_user_list.txt', 'w') as f:
             for user in self.ignore_user_list:
                 f.write('%s\n' % user)
 
     def load_ignore_user_list(self):
-        with open('data/ignore_user_list.txt', 'r') as f:
+        with open(self.default_path+'data/ignore_user_list.txt', 'r') as f:
             self.ignore_user_list = [line.strip() for line in f.readlines()]
 
     def get_user_id_list(self):
@@ -308,6 +316,9 @@ class FactBot:
 
     def get_channel_id_list(self):
         return [channel['id'] for channel in self.slacker.channels.list().body['channels']]
+
+    def get_im_id_list(self):
+        return [im['id'] for im in self.slacker.im.list().body['ims']]
 
     def get_user_id(self, user_name):
         users = self.slacker.users.list().body['members']
