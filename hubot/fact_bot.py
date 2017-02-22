@@ -70,7 +70,7 @@ class FactBot:
 
                     # Command Message
                     command = FactBot.get_command(message_json)
-                    if command:
+                    if command in self.commands.keys():
                         self.react_command(message_json, command, day)
 
                     # Slacking Count
@@ -170,7 +170,7 @@ class FactBot:
                 answer = '이미 <@%s> 님의 메시지 개수를 저장하지 않고 있어요.' % message_json.get('user', 'UNDEFINED')
                 self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
 
-        elif self.commands.get('stats') in command:
+        elif command[:len(self.commands.get('stats'))] == self.commands.get('stats'):
 
             if self.ignore_user_list.count(message_json.get('user')) != 0:
                 answer = '메시지 개수를 저장하지 않는 유저는 사용할 수 없는 기능이에요.'
