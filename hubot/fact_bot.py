@@ -98,11 +98,16 @@ class FactBot:
         :return: command string or None
         """
         try:
-            if message_json.get('type') == 'message' and 'subtype' not in message_json.keys() and \
-               message_json.get('text')[:8] == 'factbot ' and 'bot_id' not in message_json.keys():
-                return message_json.get('text')[8:]
-            else:
+            if message_json.get('type') != 'message':
                 return None
+            if 'subtype' in message_json.keys():
+                return None
+            if message_json.get('text')[:8] != 'factbot ':
+                return None
+            if 'bot_id' in message_json.keys():
+                return None
+
+            return message_json.get('text')[8:]
 
         except:
             raise TypeError
@@ -114,9 +119,18 @@ class FactBot:
         :param channel_count_dict: {'channel_id': {'user_id': count}}
         """
         try:
-            if message_json.get('type') == 'message' and 'subtype' not in message_json.keys() and \
-               'bot_id' not in message_json.keys() and message_json.get('user') not in self.ignore_user_list:
-                self.slacking_dict[message_json.get('channel', '')][message_json.get('user', '')] += 1
+            if message_json.get('type') != 'message':
+                return
+            if 'subtype' in message_json.keys():
+                return
+            if 'bot_id' in message_json.keys():
+                return
+            if message_json.get('user') in self.ignore_user_list:
+                return
+            if message_json.get('channel') in self.get_im_id_list():
+                return
+
+            self.slacking_dict[message_json.get('channel', '')][message_json.get('user', '')] += 1
 
         except:
             raise TypeError
