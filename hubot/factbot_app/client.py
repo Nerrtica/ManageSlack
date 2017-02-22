@@ -5,7 +5,7 @@ import requests.auth
 from delete_file import DeleteFile
 
 CLIENT_ID = 'client_id'
-CLIENT_SECRET = 'cliend_secret'
+CLIENT_SECRET = 'client_secret'
 PORT = port_num
 
 app = Flask(__name__)
