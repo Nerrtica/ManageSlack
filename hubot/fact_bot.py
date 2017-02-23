@@ -70,7 +70,7 @@ class FactBot:
 
                     # Command Message
                     command = FactBot.get_command(message_json)
-                    if command in self.commands.keys():
+                    if command and (command in self.commands.values() or 'stats' in command):
                         self.react_command(message_json, command, day)
 
                     # Slacking Count
@@ -116,7 +116,6 @@ class FactBot:
         """Count user's message for Today's Slacking.
 
         :param message_json: Slack message json
-        :param channel_count_dict: {'channel_id': {'user_id': count}}
         """
         try:
             if message_json.get('type') != 'message':
@@ -198,8 +197,8 @@ class FactBot:
                 date = '석양이진다빵빵빵'
                 channel_count_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
-            elif command[len(self.commands.get('stats'))] == ' ' and \
-                 len(command[len(self.commands.get('stats'))+1:]) == 8:
+            elif command[len(self.commands.get('stats'))] == ' ' \
+                    and len(command[len(self.commands.get('stats'))+1:]) == 8:
                 date = command[len(self.commands.get('stats'))+1:]
 
                 try:
@@ -273,7 +272,7 @@ class FactBot:
                 continue
             bot_say = '[오늘의 슬랙왕]\n\n'
 
-            ch_count = sorted(self.slacking_dict[channel].items(), key=lambda x:x[1], reverse=True)
+            ch_count = sorted(self.slacking_dict[channel].items(), key=lambda x: x[1], reverse=True)
             chat_count_sum = sum([i[1] for i in ch_count])
             if chat_count_sum < 5:
                 bot_say += '오늘은 <#%s> 채널의 채팅이 거의 없었네요. 많은 참여 부탁드립니다! :3\n' % channel
