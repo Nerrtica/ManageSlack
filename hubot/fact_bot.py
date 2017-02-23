@@ -127,8 +127,6 @@ class FactBot:
                 return
             if message_json.get('user') in self.ignore_user_list:
                 return
-            if message_json.get('channel') in self.get_im_id_list():
-                return
 
             self.slacking_dict[message_json.get('channel', '')][message_json.get('user', '')] += 1
 
@@ -233,7 +231,10 @@ class FactBot:
                      (message_json.get('user', 'UNDEFINED'), date[:4], date[4:6], date[6:8])
 
             user_count_dict = defaultdict(lambda: 0)
+            im_id_list = self.get_im_id_list()
             for channel in channel_count_dict.keys():
+                if channel in im_id_list:
+                    return
                 my_ch_count = channel_count_dict[channel][message_json.get('user')]
                 channel_count_sum = sum(channel_count_dict[channel].values())
                 for user in channel_count_dict[channel].keys():
@@ -262,8 +263,11 @@ class FactBot:
             self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
 
     def print_slacking(self):
+        im_id_list = self.get_im_id_list()
         for channel in self.slacking_dict.keys():
             if channel in self.ignore_channel_list:
+                continue
+            if channel in im_id_list:
                 continue
             if not self.get_channel_info(channel).get('is_member', False):
                 continue
