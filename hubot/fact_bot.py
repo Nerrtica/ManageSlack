@@ -242,6 +242,9 @@ class FactBot:
             for channel in channel_count_dict.keys():
                 if channel in im_id_list:
                     continue
+                # _factbot_notice
+                if channel == 'C47D40HFA':
+                    continue
                 my_ch_count = channel_count_dict[channel][message_json.get('user')]
                 channel_count_sum = sum(channel_count_dict[channel].values())
                 for user in channel_count_dict[channel].keys():
