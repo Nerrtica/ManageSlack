@@ -87,12 +87,6 @@ class FactBot:
                     error_count += 1
                     continue
 
-            while True:
-                message = await ws.recv()
-                message_json = json.loads(message)
-
-                self.slacking_count(message_json)
-
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         asyncio.get_event_loop().run_until_complete(execute_bot())
