@@ -45,7 +45,8 @@ class FactBot:
             today = now.tm_mday
             error_count = 0
 
-            self.slacking_dict = self.get_slacking_counts(day)
+            if len(list(self.slacking_dict.keys())) == 0:
+                self.slacking_dict = self.get_slacking_counts(day)
             self.slacker.chat.post_message('#_factbot_notice', self.hello_message, as_user=True)
 
             while True:
