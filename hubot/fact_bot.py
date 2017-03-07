@@ -52,7 +52,7 @@ class FactBot:
             while True:
 
                 try:
-                    if error_count > 10:
+                    if error_count > 5:
                         self.slacker.chat.post_message('#_factbot_notice', self.stop_message, as_user=True)
                         self.save_slacking_counts(day)
                         return
@@ -93,6 +93,8 @@ class FactBot:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             asyncio.get_event_loop().run_until_complete(execute_bot())
+
+            time.sleep(15)
 
     @staticmethod
     def get_command(message_json):
