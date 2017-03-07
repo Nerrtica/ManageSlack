@@ -54,7 +54,7 @@ class FactBot:
                     if error_count > 10:
                         self.slacker.chat.post_message('#_factbot_notice', self.stop_message, as_user=True)
                         self.save_slacking_counts(day)
-                        break
+                        return
 
                     message = await ws.recv()
                     message_json = json.loads(message)
@@ -87,10 +87,10 @@ class FactBot:
                     error_count += 1
                     continue
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        asyncio.get_event_loop().run_until_complete(execute_bot())
-        asyncio.get_event_loop().run_forever()
+        while True:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            asyncio.get_event_loop().run_until_complete(execute_bot())
 
     @staticmethod
     def get_command(message_json):
@@ -233,7 +233,7 @@ class FactBot:
 
             user_count_dict = defaultdict(lambda: 0)
             im_id_list = self.get_im_id_list()
-            for channel in channel_count_dict.keys():
+            for channel in sorted(list(channel_count_dict.keys())):
                 if channel in im_id_list:
                     continue
                 # _factbot_notice
