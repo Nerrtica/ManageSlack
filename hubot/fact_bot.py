@@ -321,6 +321,38 @@ class FactBot:
         except FileNotFoundError:
             return defaultdict(lambda: defaultdict(lambda: 0))
 
+    def get_past_count_history(self, day):
+        def _slacking_count(message_json, chan):
+            try:
+                if message_json.get('type') != 'message':
+                    return
+                if 'subtype' in message_json.keys():
+                    return
+                if 'bot_id' in message_json.keys():
+                    return
+
+                self.slacking_dict[chan][message_json.get('user', '')] += 1
+            except:
+                raise TypeError
+
+        start_unix_sec = '%.6f' % time.mktime(time.strptime(day[:4]+'/'+day[4:6]+'/'+day[6:], '%Y/%m/%d'))
+        end_unix_sec = '%.6f' % time.mktime(time.strptime(day[:4]+'/'+day[4:6]+'/'+day[6:]+' 23:59:59',
+                                                          '%Y/%m/%d %H:%M:%S'))
+        channels = self.get_channel_id_list()
+
+        for channel in channels:
+            if not self.get_channel_info(channel).get('is_member', False):
+                continue
+
+            while True:
+                channel_history = self.slacker.channels.history(channel=channel, count=1000, oldest=start_unix_sec,
+                                                                latest=end_unix_sec).body
+                for msg in channel_history['messages']:
+                    _slacking_count(msg, channel)
+                if not channel_history.get('has_more', False):
+                    break
+                end_unix_sec = '%.6f' % (float(channel_history['messages'][-1].get('ts', 1)) - 0.00001)
+
     def save_ignore_channel_list(self):
         with open(self.default_path+'data/ignore_channel_list.txt', 'w') as f:
             for channel in self.ignore_channel_list:
