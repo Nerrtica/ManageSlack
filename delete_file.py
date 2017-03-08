@@ -5,11 +5,13 @@ import json
 
 class DeleteFile:
 
-    def __init__(self, token, before_n_days=1, file_type='images', exclude_starred_items=True):
+    def __init__(self, token, before_n_days=1, file_type='images', exclude_starred_items=True, min_size=0, max_size=0):
         self.token = token
         self.before_n_days = before_n_days
         self.file_type = file_type
         self.exclude_starred_items = exclude_starred_items
+        self.min_size = min_size
+        self.max_size = max_size
 
     def get_my_id_nick(self):
         params = {
@@ -70,6 +72,11 @@ class DeleteFile:
         num_files = len(files)
 
         for file in files:
+            # size check
+            if (file['size'] / 1024) < self.min_size or \
+                    (self.max_size != 0 and (file['size'] / 1024) > self.max_size):
+                continue
+
             params = {
                 'token': self.token,
                 'file': file['id']
