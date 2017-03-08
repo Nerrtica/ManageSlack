@@ -174,6 +174,7 @@ class FactBot:
             if message_json.get('channel') in self.get_im_id_list():
                 self.slacker.chat.post_message(message_json.get('channel'), 'This command works only in #zero-bot',
                                                as_user=True)
+                return False
             if self.get_channel_info(message_json.get('channel'))['name'] != 'zero-bot':
                 return False
             elif 'add ' in sub_command:
