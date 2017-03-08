@@ -29,7 +29,7 @@ Python3 환경에서 다음의 코드로 실행합니다.
 ```
 from delete_file import DeleteFile
 
-DeleteFile(token, before_n_days=1, file_type='images', exclude_starred_items=True, min_size=0, max_size=0).run
+DeleteFile(token, before_n_days, file_type, exclude_starred_items, min_size, max_size).run
 ```
 
 * `token` 변수에 발급받은 [토큰값](https://api.slack.com/docs/oauth-test-tokens)을 넣습니다.
