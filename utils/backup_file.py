@@ -6,7 +6,7 @@ import os
 
 class BackupFile:
 
-    def __init__(self, token, before_n_days=1, file_type='images', local_backup_path='', min_size=0, max_size=0):
+    def __init__(self, token, before_n_days=1, file_type='all', local_backup_path='', min_size=0, max_size=0):
         self.token = token
         self.before_n_days = before_n_days
         self.file_type = file_type
