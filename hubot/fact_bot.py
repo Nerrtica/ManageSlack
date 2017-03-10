@@ -15,10 +15,11 @@ class FactBot:
 
     """
 
-    def __init__(self, token, admin_name, default_path):
+    def __init__(self, token, admin_name, default_path, bot_channel_name):
         self.token = token
         self.slacker = Slacker(self.token)
         self.default_path = default_path
+        self.bot_channel_name = bot_channel_name
         self.ignore_channel_list = []
         self.load_ignore_channel_list()
         self.ignore_user_list = []
@@ -154,7 +155,7 @@ class FactBot:
         elif main_command == self.commands.get('ping'):
             if sub_command == '':
                 answer = '<@%s> pong' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
             return False
 
@@ -168,28 +169,28 @@ class FactBot:
             # TODO: 코드 정리
             if sub_command == '':
                 answer = self.die_messages[random.randrange(len(self.die_messages))]
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
 
             if message_json.get('channel') in self.get_im_id_list():
-                self.slacker.chat.post_message(message_json.get('channel'), 'This command works only in #zero-bot',
+                self.slacker.chat.post_message(message_json.get('channel'), 'This command works only in #'+self.bot_channel_name,
                                                as_user=True)
                 return False
             if self.get_channel_info(message_json.get('channel'))['name'] != 'zero-bot':
                 return False
             elif 'add ' in sub_command:
                 if sub_command[4:] in self.die_messages:
-                    self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), '이미 있음', as_user=True)
+                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '이미 있음', as_user=True)
                     return True
                 self.die_messages.append(sub_command[4:])
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), '유언 추가 완료', as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '유언 추가 완료', as_user=True)
                 return True
             elif 'remove ' in sub_command:
                 try:
                     self.die_messages.remove(sub_command[7:])
-                    self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), '유언 제거', as_user=True)
+                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '유언 제거', as_user=True)
                 except ValueError:
-                    self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), '그런 말 모름', as_user=True)
+                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '그런 말 모름', as_user=True)
                 return True
             return False
 
@@ -201,7 +202,7 @@ class FactBot:
             answer = '※ factbot을 사용하기 위해서는 각 채널에 초대를 하시기 바랍니다.\n\n'
             answer += 'factbot은 각 채널 별로 매일 가장 슬랙 사용량이 높은 유저를 슬랙왕으로 추대합니다 :innocent: \n'
             answer += '사용량 통계는 *사용자별, 날짜별 메시지 count* 로만 추정하며, 지난 정보 저장을 위해 로컬에 파일로 저장됩니다.'
-            self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
 
             answer = 'factbot %s - 헬푸미\n' % self.commands.get('help')
             answer += 'factbot %s - 핑퐁핑퐁핑핑퐁퐁\n' % self.commands.get('ping')
@@ -211,11 +212,11 @@ class FactBot:
             answer += 'factbot %s <yyyymmdd> - 명령어 사용 당사자의 해당 일 슬랙 사용량을 출력합니다.\n' % \
                       self.commands.get('print_stats')
             answer += 'factbot %s - 네?\n' % self.commands.get('die')
-            self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
 
             answer = '기능 추가 및 버그 수정은 GitHub Repository에 Pull Request로 보내주시기 바랍니다.\n'
             answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
-            self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
         # TODO: 특정 명령어의 help 메시지
         else:
@@ -227,20 +228,20 @@ class FactBot:
                 self.ignore_user_list.remove(message_json.get('user'))
                 self.save_ignore_user_list()
                 answer = '다시 <@%s> 님의 메시지 개수를 저장하기 시작했어요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             except ValueError:
                 answer = '이미 <@%s> 님의 메시지 개수를 저장하고 있어요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
         elif sub_command == 'stop':
             if self.ignore_user_list.count(message_json.get('user')) == 0:
                 self.ignore_user_list.append(message_json.get('user'))
                 self.save_ignore_user_list()
                 answer = '더 이상 <@%s> 님의 메시지 개수를 저장하지 않아요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             else:
                 answer = '이미 <@%s> 님의 메시지 개수를 저장하지 않고 있어요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
         else:
             return False
@@ -248,7 +249,7 @@ class FactBot:
     def print_stats(self, message_json, sub_command, day):
         if self.ignore_user_list.count(message_json.get('user')) != 0:
             answer = '메시지 개수를 저장하지 않는 유저는 사용할 수 없는 기능이에요.'
-            self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
 
         if sub_command == '' or sub_command == '%s' % day:
@@ -268,24 +269,26 @@ class FactBot:
 
                 if int(date[:4]) < 2017:
                     answer = '그 때는 제가 태어나기 전이라구요 :sob:'
-                    self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name),
+                                                   answer, as_user=True)
                     return True
 
                 elif int(date) > int(day):
                     answer = '뭐에요, 저보고 미래라도 보라는 건가요?'
-                    self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name),
+                                                   answer, as_user=True)
                     return True
 
                 channel_count_dict = self.get_slacking_counts(date)
 
             except ValueError:
                 answer = '제대로 된 포맷으로 적어주세요. <YYYYMMDD>'
-                self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
 
         else:
             answer = '제대로 된 포맷으로 적어주세요. <YYYYMMDD>'
-            self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
 
         answer = '<@%s> 님의 %s년 %s월 %s일 통계에요.\n\n' % \
@@ -311,7 +314,7 @@ class FactBot:
 
         if user_count_dict[message_json.get('user')] == 0:
             answer += '해당 날짜의 메시지 카운트 정보가 없어요.'
-            self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
 
         all_count = sorted(user_count_dict.items(), key=lambda x: x[1], reverse=True)
@@ -320,7 +323,7 @@ class FactBot:
                    [i[0] for i in all_count].index(message_json.get('user')) + 1,
                    user_count_dict[message_json.get('user')] / sum([i[1] for i in all_count]) * 100)
 
-        self.slacker.chat.post_message(message_json.get('channel', '#zero-bot'), answer, as_user=True)
+        self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
         return True
 
     def print_slacking(self):
