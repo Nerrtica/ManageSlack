@@ -76,3 +76,4 @@ __pycache__/*
 # Log file
 *.log
 hubot/data/
+hubot/steamers/
