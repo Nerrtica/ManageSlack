@@ -335,19 +335,22 @@ class FactBot:
                 continue
             if not self.get_channel_info(channel).get('is_member', False):
                 continue
-            bot_say = '[오늘의 슬랙왕]\n\n'
+            bot_say = '[오늘의 <#%s>왕]\n' % channel
 
             ch_count = sorted(self.slacking_dict[channel].items(), key=lambda x: x[1], reverse=True)
             chat_count_sum = sum([i[1] for i in ch_count])
-            if chat_count_sum < 5:
-                bot_say += '오늘은 <#%s> 채널의 채팅이 거의 없었네요. 많은 참여 부탁드립니다! :3\n' % channel
+            kings = [user[0] for user in ch_count if user[1] == ch_count[0][1]]
+            if chat_count_sum < 5 or len(ch_count) < 2:
+                continue
+            elif chat_count_sum < 10:
+                bot_say += '충분한 채팅이 오가지 않았어요. 많은 참여 부탁드립니다! :3\n' % channel
             else:
-                bot_say += '오늘 <#%s> 채널에서는 총 %d회의 채팅이 오갔어요!\n' % (channel, chat_count_sum)
-                king_name = self.get_user_info(ch_count[0][0]).get('name', 'UNDEFINED')
-                bot_say += '오늘의 <#%s> 채널 슬랙왕은 %s입니다! %d회의 채팅을 하셨어요!\n' % \
-                           (channel, king_name[0] + '.' + king_name[1:], ch_count[0][1])
-            bot_say += '\n(factbot의 사용법이 필요하시면 `factbot %s`! 피드백은 DM <@%s>!)' % \
-                       (self.commands.get('help', 'help'), self.admin_id)
+                kings_name = []
+                for king in kings:
+                    kings_name.append(self.get_user_info(king).get('name', 'UNDEFINED'))
+                king_name = ' & '.join([name[0]+'.'+name[1:] for name in kings_name])
+                bot_say += ':crown: %s! (%d회 / 총 %d회, 지분율 %.2f%%)' % \
+                           (king_name, ch_count[0][1], chat_count_sum, float(ch_count[0][1])/chat_count_sum*100)
 
             self.slacker.chat.post_message(channel, bot_say, as_user=True)
 
