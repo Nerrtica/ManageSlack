@@ -314,8 +314,19 @@ class FactBot:
                 user_count_dict[user] += channel_count_dict[channel][user]
             if my_ch_count != 0:
                 ch_count = sorted(channel_count_dict[channel].items(), key=lambda x: x[1], reverse=True)
+
+                ranks = []
+                before_count = ch_count[0][1]
+                rank = 1
+                ranks.append(rank)
+                for i, count in enumerate(ch_count[1:]):
+                    if count[1] != before_count:
+                        before_count = count[1]
+                        rank = i + 2
+                    ranks.append(rank)
+
                 answer += '<#%s> %d회 (%d위, 점유율 %d%%)\n' % \
-                          (channel, my_ch_count, [i[0] for i in ch_count].index(message_json['user']) + 1,
+                          (channel, my_ch_count, ranks[[i[0] for i in ch_count].index(message_json['user'])],
                            my_ch_count / channel_count_sum * 100)
 
         if user_count_dict[message_json.get('user')] == 0:
@@ -324,9 +335,20 @@ class FactBot:
             return True
 
         all_count = sorted(user_count_dict.items(), key=lambda x: x[1], reverse=True)
+
+        ranks = []
+        before_count = all_count[0][1]
+        rank = 1
+        ranks.append(rank)
+        for i, count in enumerate(all_count[1:]):
+            if count[1] != before_count:
+                before_count = count[1]
+                rank = i + 2
+            ranks.append(rank)
+
         answer += '\n전체 %d회 (%d위, 점유율 %d%%)\n' % \
                   (user_count_dict[message_json.get('user')],
-                   [i[0] for i in all_count].index(message_json.get('user')) + 1,
+                   ranks[[i[0] for i in all_count].index(message_json.get('user'))],
                    user_count_dict[message_json.get('user')] / sum([i[1] for i in all_count]) * 100)
 
         self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
