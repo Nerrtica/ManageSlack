@@ -56,8 +56,10 @@ class FactBot:
             while True:
 
                 try:
-                    if error_count > 5:
+                    if error_count >= 5:
                         self.slacker.chat.post_message(self.notice_channel_name, self.stop_message, as_user=True)
+                        if now.tm_mday != today:
+                            self.print_slacking()
                         self.save_slacking_counts(day)
                         return
 
@@ -91,6 +93,8 @@ class FactBot:
                         if im['user'] == self.admin_id:
                             self.slacker.chat.post_message(im['id'], str(message_json), as_user=True)
                     error_count += 1
+                    if now.tm_mday != today:
+                        error_count = 5
                     continue
 
         while True:
