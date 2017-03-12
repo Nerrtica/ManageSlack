@@ -169,34 +169,33 @@ class FactBot:
             return self.print_stats(message_json, sub_command, day)
 
         elif main_command == self.commands.get('die'):
-            # TODO: 코드 정리
             if sub_command == '':
                 answer = self.die_messages[random.randrange(len(self.die_messages))]
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
 
             if message_json.get('channel') in self.get_im_id_list():
-                self.slacker.chat.post_message(message_json.get('channel'), 'This command works only in #'+self.bot_channel_name,
-                                               as_user=True)
+                answer = 'This command works only in ' + self.bot_channel_name
+                self.slacker.chat.post_message(message_json.get('channel'), answer, as_user=True)
                 return False
             if self.get_channel_info(message_json.get('channel'))['name'] != 'zero-bot':
                 return False
             elif 'add ' in sub_command:
                 if sub_command[4:] in self.die_messages:
-                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '이미 있음', as_user=True)
-                    return True
-                self.die_messages.append(sub_command[4:])
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '유언 추가 완료', as_user=True)
+                    answer = '이미 있음'
+                else:
+                    self.die_messages.append(sub_command[4:])
+                    answer = '유언 추가 완료'
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
             elif 'remove ' in sub_command:
-                try:
+                if sub_command[7:] in self.die_messages:
                     self.die_messages.remove(sub_command[7:])
-                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '유언 제거', as_user=True)
-                except ValueError:
-                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), '그런 말 모름', as_user=True)
+                    answer = '유언 제거'
+                else:
+                    answer = '그런 말 모름'
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
-            return False
-
         else:
             return False
 
