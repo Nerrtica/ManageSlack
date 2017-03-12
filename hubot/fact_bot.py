@@ -15,11 +15,14 @@ class FactBot:
 
     """
 
-    def __init__(self, token, admin_name, default_path, bot_channel_name):
+    def __init__(self, token, admin_name, default_path, bot_channel_name, notice_channel_name):
         self.token = token
         self.slacker = Slacker(self.token)
         self.default_path = default_path
         self.bot_channel_name = bot_channel_name
+        self.notice_channel_name = notice_channel_name
+        self.notice_channel_id = [c_id for c_id in self.get_channel_id_list()
+                                  if self.get_channel_info(c_id)['name'] == notice_channel_name[1:]][0]
         self.ignore_channel_list = []
         self.load_ignore_channel_list()
         self.ignore_user_list = []
@@ -48,13 +51,13 @@ class FactBot:
 
             if len(list(self.slacking_dict.keys())) == 0:
                 self.slacking_dict = self.get_slacking_counts(day)
-            self.slacker.chat.post_message('#_factbot_notice', self.hello_message, as_user=True)
+            self.slacker.chat.post_message(self.notice_channel_name, self.hello_message, as_user=True)
 
             while True:
 
                 try:
                     if error_count > 5:
-                        self.slacker.chat.post_message('#_factbot_notice', self.stop_message, as_user=True)
+                        self.slacker.chat.post_message(self.notice_channel_name, self.stop_message, as_user=True)
                         self.save_slacking_counts(day)
                         return
 
@@ -83,7 +86,7 @@ class FactBot:
                         self.slacking_count(message_json)
 
                 except:
-                    self.slacker.chat.post_message('#_factbot_notice', self.error_message, as_user=True)
+                    self.slacker.chat.post_message(self.notice_channel_name, self.error_message, as_user=True)
                     for im in self.slacker.im.list().body['ims']:
                         if im['user'] == self.admin_id:
                             self.slacker.chat.post_message(im['id'], str(message_json), as_user=True)
@@ -304,8 +307,7 @@ class FactBot:
         for channel in sorted(list(channel_count_dict.keys())):
             if channel in im_id_list:
                 continue
-            # _factbot_notice
-            if channel == 'C47D40HFA':
+            if channel == self.notice_channel_id:
                 continue
             my_ch_count = channel_count_dict[channel][message_json.get('user')]
             channel_count_sum = sum(channel_count_dict[channel].values())
