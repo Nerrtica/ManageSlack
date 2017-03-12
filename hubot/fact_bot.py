@@ -33,7 +33,7 @@ class FactBot:
         self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
         self.commands = {'help': 'help', 'ping': 'ping', 'count_auth': 'count',
-                         'print_stats': 'stats', 'die': 'die'}
+                         'print_stats': 'stats', 'die': 'die', 'version': '-V'}
         self.hello_message = 'Factbot Start running!'
         self.error_message = 'Error Error <@nerrtica>'
         self.stop_message = 'Too many Error... <@nerrtica>'
@@ -196,8 +196,13 @@ class FactBot:
                     answer = '그런 말 모름'
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
-        else:
-            return False
+
+        elif main_command == self.commands.get('version'):
+            if sub_command == '':
+                answer = 'Factbot version 1.1.2'
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+                return True
+        return False
 
     def print_help(self, message_json, sub_command):
         if sub_command == '' or sub_command in self.commands.values():
@@ -218,6 +223,8 @@ class FactBot:
                 answer += 'factbot %s - 명령어 사용 당사자의 당일 슬랙 사용량을 출력합니다.\n' % self.commands.get('print_stats')
                 answer += 'factbot %s <yyyymmdd> - 명령어 사용 당사자의 해당 일 슬랙 사용량을 출력합니다.\n' % \
                            self.commands.get('print_stats')
+            if sub_command == '' or sub_command == self.commands.get('version'):
+                answer += 'factbot %s - factbot의 현재 버전을 출력합니다.' % self.commands.get('version')
             if sub_command == '' or sub_command == self.commands.get('die'):
                 answer += 'factbot %s - 네?\n' % self.commands.get('die')
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
