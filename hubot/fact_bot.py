@@ -31,6 +31,7 @@ class FactBot:
         self.admin_id = self.get_user_id(admin_name)
 
         self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
+        self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
         self.commands = {'help': 'help', 'ping': 'ping', 'count_auth': 'count',
                          'print_stats': 'stats', 'die': 'die', 'version': '-V'}
@@ -51,6 +52,8 @@ class FactBot:
 
             if len(list(self.slacking_dict.keys())) == 0:
                 self.slacking_dict = self.get_slacking_counts(day)
+            if len(list(self.statistics_dict.keys())) == 0:
+                self.statistics_dict = self.get_statistics_counts(day)
             self.slacker.chat.post_message(self.notice_channel_name, self.hello_message, as_user=True)
 
             while True:
@@ -61,6 +64,7 @@ class FactBot:
                         if now.tm_mday != today:
                             self.print_slacking()
                         self.save_slacking_counts(day)
+                        self.save_statistics_counts(day)
                         return
 
                     message = await ws.recv()
@@ -71,10 +75,12 @@ class FactBot:
                     if now.tm_mday != today:
                         self.print_slacking()
                         self.save_slacking_counts(day)
+                        self.save_statistics_counts(day)
 
                         today = now.tm_mday
                         day = '%04d' % now.tm_year + '%02d' % now.tm_mon + '%02d' % now.tm_mday
                         self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
+                        self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
                         error_count = 0
 
                     # Command Message
@@ -86,6 +92,7 @@ class FactBot:
                     # Slacking Count
                     if not is_command:
                         self.slacking_count(message_json)
+                        self.statistics_count(message_json)
 
                 except:
                     self.slacker.chat.post_message(self.notice_channel_name, self.error_message, as_user=True)
@@ -135,20 +142,29 @@ class FactBot:
 
         :param message_json: Slack message json
         """
-        try:
-            if message_json.get('type') != 'message':
-                return
-            if 'subtype' in message_json.keys():
-                return
-            if 'bot_id' in message_json.keys():
-                return
-            if message_json.get('user') in self.ignore_user_list:
-                return
+        if message_json.get('type') != 'message':
+            return
+        if 'subtype' in message_json.keys():
+            return
+        if 'bot_id' in message_json.keys():
+            return
+        if message_json.get('user') in self.ignore_user_list:
+            return
 
-            self.slacking_dict[message_json.get('channel', '')][message_json.get('user', '')] += 1
+        self.slacking_dict[message_json.get('channel', '')][message_json.get('user', '')] += 1
 
-        except:
-            raise TypeError
+    def statistics_count(self, message_json):
+        if message_json.get('type') != 'message':
+            return
+        if 'subtype' in message_json.keys():
+            return
+        if 'bot_id' in message_json.keys():
+            return
+        if message_json.get('user') in self.ignore_user_list:
+            return
+
+        hour = time.localtime(float(message_json.get('ts', time.time()))).tm_hour
+        self.statistics_dict[message_json.get('channel', '')][hour] += 1
 
     def react_command(self, message_json, main_command, sub_command, day):
         if message_json.get('channel') in self.get_im_id_list():
@@ -412,6 +428,30 @@ class FactBot:
                         channel = line[1:]
                     elif ':' in line:
                         channel_count_dict[channel][line.split(':')[0].strip()] = int(line.split(':')[1].strip())
+            return channel_count_dict
+
+        except FileNotFoundError:
+            return defaultdict(lambda: defaultdict(lambda: 0))
+
+    def save_statistics_counts(self, day):
+        with open(self.default_path+'data/statistics_counts/'+day+'.log', 'w') as f:
+            for channel in self.statistics_dict.keys():
+                f.write('#%s\n' % channel)
+                for hour in self.statistics_dict[channel].keys():
+                    f.write('%d : %d\n' % (hour, self.statistics_dict[channel][hour]))
+                f.write('\n')
+
+    def get_statistics_counts(self, day):
+        try:
+            with open(self.default_path+'data/statistics_counts/'+day+'.log', 'r') as f:
+                channel_count_dict = defaultdict(lambda: defaultdict(lambda: 0))
+                channel = ''
+                for line in f.readlines():
+                    line = line.strip()
+                    if '#' in line:
+                        channel = line[1:]
+                    elif ':' in line:
+                        channel_count_dict[channel][int(line.split(':')[0].strip())] = int(line.split(':')[1].strip())
             return channel_count_dict
 
         except FileNotFoundError:
