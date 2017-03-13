@@ -61,10 +61,12 @@ class FactBot:
                 try:
                     if error_count >= 5:
                         self.slacker.chat.post_message(self.notice_channel_name, self.stop_message, as_user=True)
-                        if now.tm_mday != today:
-                            self.print_slacking()
                         self.save_slacking_counts(day)
                         self.save_statistics_counts(day)
+                        if now.tm_mday != today:
+                            self.print_slacking()
+                            self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
+                            self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
                         return
 
                     message = await ws.recv()
