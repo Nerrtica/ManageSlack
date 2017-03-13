@@ -244,7 +244,7 @@ class FactBot:
             if sub_command == '' or sub_command == self.commands.get('print_stats'):
                 answer += 'factbot %s - 명령어 사용 당사자의 당일 슬랙 사용량을 출력합니다.\n' % self.commands.get('print_stats')
                 answer += 'factbot %s <yyyymmdd> - 명령어 사용 당사자의 해당 일 슬랙 사용량을 출력합니다.\n' % \
-                           self.commands.get('print_stats')
+                          self.commands.get('print_stats')
             if sub_command == '' or sub_command == self.commands.get('version'):
                 answer += 'factbot %s - factbot의 현재 버전을 출력합니다.' % self.commands.get('version')
             if sub_command == '' or sub_command == self.commands.get('die'):
