@@ -55,6 +55,7 @@ class FactBot:
             if len(list(self.statistics_dict.keys())) == 0:
                 self.statistics_dict = self.get_statistics_counts(day)
             self.slacker.chat.post_message(self.notice_channel_name, self.hello_message, as_user=True)
+            message_json = {}
 
             while True:
 
@@ -405,7 +406,7 @@ class FactBot:
                 kings_name = []
                 for king in kings:
                     kings_name.append(self.get_user_info(king).get('name', 'UNDEFINED'))
-                king_name = ' & '.join([name[0]+'.'+name[1:] for name in kings_name])
+                king_name = ' & '.join(['%s.%s' % (name[0], name[1:]) for name in kings_name])
                 bot_say += ':crown: %s! (%d회 / 총 %d회, 지분율 %.2f%%)' % \
                            (king_name, ch_count[0][1], chat_count_sum, float(ch_count[0][1])/chat_count_sum*100)
 
