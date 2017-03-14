@@ -107,7 +107,7 @@ class FactBot:
                         error_count = 5
                     continue
 
-        while True:
+        for i in range(5):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             asyncio.get_event_loop().run_until_complete(execute_bot())
@@ -401,7 +401,7 @@ class FactBot:
             if chat_count_sum < 5 or len(ch_count) < 2:
                 continue
             elif chat_count_sum < 10:
-                bot_say += '충분한 채팅이 오가지 않았어요. 많은 참여 부탁드립니다! :3\n' % channel
+                bot_say += '충분한 채팅이 오가지 않았어요. 많은 참여 부탁드립니다! :3'
             else:
                 kings_name = []
                 for king in kings:
