@@ -121,24 +121,20 @@ class FactBot:
         :param message_json: Slack message json
         :return: command string or None
         """
-        try:
-            if message_json.get('type') != 'message':
-                return '', ''
-            if 'subtype' in message_json.keys():
-                return '', ''
-            if message_json.get('text')[:8] != 'factbot ':
-                return '', ''
-            if 'bot_id' in message_json.keys():
-                return '', ''
+        if message_json.get('type', '') != 'message':
+            return '', ''
+        if 'subtype' in message_json.keys():
+            return '', ''
+        if message_json.get('text', '')[:8] != 'factbot ':
+            return '', ''
+        if 'bot_id' in message_json.keys():
+            return '', ''
 
-            full_command = message_json.get('text')[8:]
-            if full_command.find(' ') == -1:
-                return full_command, ''
-            else:
-                return full_command[:full_command.find(' ')], full_command[full_command.find(' ')+1:]
-
-        except:
-            raise TypeError
+        full_command = message_json.get('text', '')[8:]
+        if full_command.find(' ') == -1:
+            return full_command, ''
+        else:
+            return full_command[:full_command.find(' ')], full_command[full_command.find(' ')+1:]
 
     def slacking_count(self, message_json):
         """Count user's message for Today's Slacking.
@@ -462,17 +458,25 @@ class FactBot:
 
     def get_past_count_history(self, day):
         def _slacking_count(message_json, chan):
-            try:
-                if message_json.get('type') != 'message':
-                    return
-                if 'subtype' in message_json.keys():
-                    return
-                if 'bot_id' in message_json.keys():
-                    return
+            if message_json.get('type') != 'message':
+                return
+            if 'subtype' in message_json.keys():
+                return
+            if 'bot_id' in message_json.keys():
+                return
 
-                self.slacking_dict[chan][message_json.get('user', '')] += 1
-            except:
-                raise TypeError
+            self.slacking_dict[chan][message_json.get('user', '')] += 1
+
+        def _statistics_count(message_json, chan):
+            if message_json.get('type') != 'message':
+                return
+            if 'subtype' in message_json.keys():
+                return
+            if 'bot_id' in message_json.keys():
+                return
+
+            hour = time.localtime(float(message_json.get('ts', time.time()))).tm_hour
+            self.statistics_dict[chan][hour] += 1
 
         start_unix_sec = '%.6f' % time.mktime(time.strptime(day[:4]+'/'+day[4:6]+'/'+day[6:], '%Y/%m/%d'))
         end_unix_sec = '%.6f' % time.mktime(time.strptime(day[:4]+'/'+day[4:6]+'/'+day[6:]+' 23:59:59',
@@ -488,6 +492,7 @@ class FactBot:
                                                                 latest=end_unix_sec).body
                 for msg in channel_history['messages']:
                     _slacking_count(msg, channel)
+                    _statistics_count(msg, channel)
                 if not channel_history.get('has_more', False):
                     break
                 end_unix_sec = '%.6f' % (float(channel_history['messages'][-1].get('ts', 1)) - 0.00001)
