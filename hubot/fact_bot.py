@@ -42,6 +42,7 @@ class FactBot:
         self.die_messages = [':innocent: :gun:', '으앙듀금', '꿲', '영웅은 죽지않아요']
 
         self.eng_space = re.compile('[A-Za-z0-9 ]')
+        self.version = '1.1.8'
 
     def run(self):
         async def execute_bot():
@@ -222,7 +223,7 @@ class FactBot:
 
         elif main_command == self.commands.get('version'):
             if sub_command == '':
-                answer = 'Factbot version 1.1.2'
+                answer = 'Factbot version %s' % self.version
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
         return False
