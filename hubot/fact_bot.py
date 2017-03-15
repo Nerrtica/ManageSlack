@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 
+import re
 import time
 import json
 import random
@@ -34,11 +35,13 @@ class FactBot:
         self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
         self.commands = {'help': 'help', 'ping': 'ping', 'count_auth': 'count',
-                         'print_stats': 'stats', 'die': 'die', 'version': '-V'}
+                         'print_stats': 'stats', 'die': 'die', 'version': 'version'}
         self.hello_message = 'Factbot Start running!'
         self.error_message = 'Error Error <@nerrtica>'
         self.stop_message = 'Too many Error... <@nerrtica>'
         self.die_messages = [':innocent: :gun:', '으앙듀금', '꿲', '영웅은 죽지않아요']
+
+        self.eng_space = re.compile('[A-Za-z0-9 ]')
 
     def run(self):
         async def execute_bot():
@@ -87,7 +90,7 @@ class FactBot:
                         error_count = 0
 
                     # Command Message
-                    main_command, sub_command = FactBot.get_command(message_json)
+                    main_command, sub_command = self.get_command(message_json)
                     is_command = False
                     if main_command and (main_command in self.commands.values()):
                         is_command = self.react_command(message_json, main_command, sub_command, day)
@@ -114,8 +117,7 @@ class FactBot:
 
             time.sleep(15)
 
-    @staticmethod
-    def get_command(message_json):
+    def get_command(self, message_json):
         """If a user calls factbot, get bot command string.
 
         :param message_json: Slack message json
@@ -128,6 +130,8 @@ class FactBot:
         if message_json.get('text', '')[:8] != 'factbot ':
             return '', ''
         if 'bot_id' in message_json.keys():
+            return '', ''
+        if self.eng_space.sub('', message_json.get('text', '')).replace('석양이진다빵빵빵', '') != '':
             return '', ''
 
         full_command = message_json.get('text', '')[8:]
@@ -254,6 +258,10 @@ class FactBot:
                 answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
+        elif sub_command != '' and sub_command not in self.commands.values():
+            answer = 'no such command : factbot %s' % sub_command
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
         else:
             return False
 
