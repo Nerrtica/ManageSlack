@@ -225,10 +225,11 @@ class FactBot:
 
     def print_help(self, message_json, sub_command):
         if sub_command == '' or sub_command in self.commands.values():
-            answer = '※ factbot을 사용하기 위해서는 각 채널에 초대를 하시기 바랍니다.\n\n'
-            answer += 'factbot은 각 채널 별로 매일 가장 슬랙 사용량이 높은 유저를 슬랙왕으로 추대합니다 :innocent: \n'
-            answer += '사용량 통계는 *사용자별, 날짜별 메시지 count* 로만 추정하며, 지난 정보 저장을 위해 로컬에 파일로 저장됩니다.'
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            if sub_command == '':
+                answer = '※ factbot을 사용하기 위해서는 각 채널에 초대를 하시기 바랍니다.\n\n'
+                answer += 'factbot은 각 채널 별로 매일 가장 슬랙 사용량이 높은 유저를 슬랙왕으로 추대합니다 :innocent: \n'
+                answer += '사용량 통계는 *사용자별, 날짜별 메시지 count* 로만 추정하며, 지난 정보 저장을 위해 로컬에 파일로 저장됩니다.'
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
 
             answer = ''
             if sub_command == '' or sub_command == self.commands.get('help'):
@@ -248,9 +249,10 @@ class FactBot:
                 answer += 'factbot %s - 네?\n' % self.commands.get('die')
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
 
-            answer = '기능 추가 및 버그 수정은 GitHub Repository에 Pull Request로 보내주시기 바랍니다.\n'
-            answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            if sub_command == '':
+                answer = '기능 추가 및 버그 수정은 GitHub Repository에 Pull Request로 보내주시기 바랍니다.\n'
+                answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
         else:
             return False
