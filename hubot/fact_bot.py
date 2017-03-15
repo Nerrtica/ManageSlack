@@ -238,6 +238,7 @@ class FactBot:
             answer = ''
             if sub_command == '' or sub_command == self.commands.get('help'):
                 answer += 'factbot %s - 헬푸미\n' % self.commands.get('help')
+                answer += 'factbot %s <command> - 왓츠 디스 명령어?\n' % self.commands.get('help')
             if sub_command == '' or sub_command == self.commands.get('ping'):
                 answer += 'factbot %s - 핑퐁핑퐁핑핑퐁퐁\n' % self.commands.get('ping')
             if sub_command == '' or sub_command == self.commands.get('count_auth'):
