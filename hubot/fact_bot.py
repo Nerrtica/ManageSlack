@@ -244,7 +244,7 @@ class FactBot:
                 answer += 'factbot %s <yyyymmdd> - 명령어 사용 당사자의 해당 일 슬랙 사용량을 출력합니다.\n' % \
                           self.commands.get('print_stats')
             if sub_command == '' or sub_command == self.commands.get('version'):
-                answer += 'factbot %s - factbot의 현재 버전을 출력합니다.' % self.commands.get('version')
+                answer += 'factbot %s - factbot의 현재 버전을 출력합니다.\n' % self.commands.get('version')
             if sub_command == '' or sub_command == self.commands.get('die'):
                 answer += 'factbot %s - 네?\n' % self.commands.get('die')
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
