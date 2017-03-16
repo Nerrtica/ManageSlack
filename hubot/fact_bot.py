@@ -304,6 +304,8 @@ class FactBot:
         elif main_command == self.admin_commands.get('crawl'):
             if sub_command == '':
                 sub_command = day
+            self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
+            self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
             self.get_past_count_history(sub_command)
             answer = '%s 카운트 크롤링 완료' % sub_command
             self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
