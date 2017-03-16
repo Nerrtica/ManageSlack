@@ -36,10 +36,18 @@ class FactBot:
 
         self.commands = {'help': 'help', 'ping': 'ping', 'count_auth': 'count',
                          'print_stats': 'stats', 'die': 'die', 'version': 'version'}
+        self.admin_commands = {'help': 'help', 'die': 'kill', 'restart': 'restart', 'save': 'save',
+                               'load': 'load', 'crawl': 'crawl', 'print': 'print'}
         self.hello_message = 'Factbot Start running!'
         self.error_message = 'Error Error <@nerrtica>'
         self.stop_message = 'Too many Error... <@nerrtica>'
+        self.kill_message = 'Bye Bye!'
         self.die_messages = [':innocent: :gun:', '으앙듀금', '꿲', '영웅은 죽지않아요']
+
+        self.ALIVE = 0
+        self.RESTART = 1
+        self.DIE = 2
+        self.status = self.ALIVE
 
         self.eng_space = re.compile('[A-Za-z0-9 ]')
         self.version = '1.1.8'
@@ -53,6 +61,7 @@ class FactBot:
             day = '%4d' % now.tm_year + '%02d' % now.tm_mon + '%02d' % now.tm_mday
             today = now.tm_mday
             error_count = 0
+            self.status = self.ALIVE
 
             if len(list(self.slacking_dict.keys())) == 0:
                 self.slacking_dict = self.get_slacking_counts(day)
@@ -62,6 +71,8 @@ class FactBot:
             message_json = {}
 
             while True:
+                if self.status != self.ALIVE:
+                    return
 
                 try:
                     if error_count >= 5:
@@ -90,16 +101,21 @@ class FactBot:
                         self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
                         error_count = 0
 
+                    # Admin Command Message
+                    main_command, sub_command = self.get_admin_command(message_json)
+                    if main_command and (main_command in self.admin_commands.values()):
+                        if self.react_admin_command(message_json, main_command, sub_command, day):
+                            continue
+
                     # Command Message
                     main_command, sub_command = self.get_command(message_json)
-                    is_command = False
                     if main_command and (main_command in self.commands.values()):
-                        is_command = self.react_command(message_json, main_command, sub_command, day)
+                        if self.react_command(message_json, main_command, sub_command, day):
+                            continue
 
                     # Slacking Count
-                    if not is_command:
-                        self.slacking_count(message_json)
-                        self.statistics_count(message_json)
+                    self.slacking_count(message_json)
+                    self.statistics_count(message_json)
 
                 except:
                     self.slacker.chat.post_message(self.notice_channel_name, self.error_message, as_user=True)
@@ -116,13 +132,17 @@ class FactBot:
             asyncio.set_event_loop(loop)
             asyncio.get_event_loop().run_until_complete(execute_bot())
 
+            if self.status == self.DIE:
+                self.slacker.chat.post_message(self.notice_channel_name, self.kill_message, as_user=True)
+                return
+
             time.sleep(15)
 
     def get_command(self, message_json):
         """If a user calls factbot, get bot command string.
 
         :param message_json: Slack message json
-        :return: command string or None
+        :return: (command string, subcommand string). if not command, ('', '')
         """
         if message_json.get('type', '') != 'message':
             return '', ''
@@ -133,6 +153,28 @@ class FactBot:
         if 'bot_id' in message_json.keys():
             return '', ''
         if self.eng_space.sub('', message_json.get('text', '')).replace('석양이진다빵빵빵', '') != '':
+            return '', ''
+
+        full_command = message_json.get('text', '')[8:]
+        if full_command.find(' ') == -1:
+            return full_command, ''
+        else:
+            return full_command[:full_command.find(' ')], full_command[full_command.find(' ')+1:]
+
+    def get_admin_command(self, message_json):
+        """If admin calls factbot, get bot command string.
+
+        :param message_json: Slack message json
+        :return: (command string, subcommand string). if not command, ('', '')
+        """
+
+        if message_json.get('type', '') != 'message':
+            return '', ''
+        if 'subtype' in message_json.keys():
+            return '', ''
+        if message_json.get('user') != self.admin_id:
+            return '', ''
+        if message_json.get('text', '')[:8] != 'factbot ':
             return '', ''
 
         full_command = message_json.get('text', '')[8:]
@@ -226,6 +268,44 @@ class FactBot:
                 answer = 'Factbot version %s' % self.version
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
                 return True
+        return False
+
+    def react_admin_command(self, message_json, main_command, sub_command, day):
+        if main_command == self.admin_commands.get('help') and sub_command == '나야나':
+            answer = 'help 나야나, kill, restart, save [day], load [day], crawl [day], print slacking'
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
+
+        elif main_command == self.admin_commands.get('die') and sub_command == '':
+            self.status = self.DIE
+            return True
+
+        elif main_command == self.admin_commands.get('restart') and sub_command == '':
+            self.status = self.RESTART
+            return True
+
+        elif main_command == self.admin_commands.get('save'):
+            if sub_command == '':
+                sub_command = day
+            self.save_slacking_counts(sub_command)
+            self.save_statistics_counts(sub_command)
+            return True
+
+        elif main_command == self.admin_commands.get('load'):
+            if sub_command == '':
+                sub_command = day
+            self.get_slacking_counts(sub_command)
+            self.get_statistics_counts(sub_command)
+            return True
+
+        elif main_command == self.admin_commands.get('crawl'):
+            if sub_command == '':
+                sub_command = day
+            self.get_past_count_history(sub_command)
+            return True
+
+        elif main_command == self.admin_commands.get('print') and sub_command == 'slacking':
+            self.print_slacking()
+            return True
         return False
 
     def print_help(self, message_json, sub_command):
