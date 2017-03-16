@@ -288,6 +288,8 @@ class FactBot:
                 sub_command = day
             self.save_slacking_counts(sub_command)
             self.save_statistics_counts(sub_command)
+            answer = '%s 카운트 저장 완료' % sub_command
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
             return True
 
         elif main_command == self.admin_commands.get('load'):
@@ -295,12 +297,16 @@ class FactBot:
                 sub_command = day
             self.get_slacking_counts(sub_command)
             self.get_statistics_counts(sub_command)
+            answer = '%s 카운트 로드 완료' % sub_command
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
             return True
 
         elif main_command == self.admin_commands.get('crawl'):
             if sub_command == '':
                 sub_command = day
             self.get_past_count_history(sub_command)
+            answer = '%s 카운트 크롤링 완료' % sub_command
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
             return True
 
         elif main_command == self.admin_commands.get('print') and sub_command == 'slacking':
