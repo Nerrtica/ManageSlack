@@ -22,7 +22,7 @@ class FactBot:
         self.default_path = default_path
         self.bot_channel_name = bot_channel_name
         self.notice_channel_name = notice_channel_name
-        self.notice_channel_id = [c_id for c_id in self.slacker.channels.list().body['channels']
+        self.notice_channel_id = [c_id['id'] for c_id in self.slacker.channels.list().body['channels']
                                   if c_id['name'] == notice_channel_name[1:]][0]
         self.ignore_channel_list = []
         self.load_ignore_channel_list()
