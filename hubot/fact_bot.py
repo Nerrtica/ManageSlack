@@ -295,8 +295,8 @@ class FactBot:
         elif main_command == self.admin_commands.get('load'):
             if sub_command == '':
                 sub_command = day
-            self.get_slacking_counts(sub_command)
-            self.get_statistics_counts(sub_command)
+            self.slacking_dict = self.get_slacking_counts(sub_command)
+            self.statistics_dict = self.get_statistics_counts(sub_command)
             answer = '%s 카운트 로드 완료' % sub_command
             self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
             return True
