@@ -50,7 +50,7 @@ class FactBot:
         self.status = self.ALIVE
 
         self.eng_space = re.compile('[A-Za-z0-9 ]')
-        self.version = '1.1.8'
+        self.version = '1.2.0'
 
     def run(self):
         async def execute_bot():
