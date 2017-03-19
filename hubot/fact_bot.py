@@ -49,8 +49,8 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.eng_space = re.compile('[A-Za-z0-9 ]')
-        self.version = '1.2.0'
+        self.eng_space_call = re.compile('[A-Za-z0-9 <>@]')
+        self.version = '1.2.1'
 
     def run(self):
         async def execute_bot():
@@ -148,14 +148,18 @@ class FactBot:
             return '', ''
         if 'subtype' in message_json.keys():
             return '', ''
-        if message_json.get('text', '')[:8] != 'factbot ':
-            return '', ''
         if 'bot_id' in message_json.keys():
             return '', ''
-        if self.eng_space.sub('', message_json.get('text', '')).replace('석양이진다빵빵빵', '') != '':
+        if self.eng_space_call.sub('', message_json.get('text', '')).replace('석양이진다빵빵빵', '') != '':
             return '', ''
 
-        full_command = message_json.get('text', '')[8:]
+        if message_json.get('text', '')[:8] == 'factbot ':
+            full_command = message_json.get('text', '')[8:]
+        elif message_json.get('text', '')[:len(self.id)+4] == '<@%s> ' % self.id:
+            full_command = message_json.get('text', '')[len(self.id)+4:]
+        else:
+            return '', ''
+
         if full_command.find(' ') == -1:
             return full_command, ''
         else:
