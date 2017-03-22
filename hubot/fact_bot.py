@@ -219,6 +219,8 @@ class FactBot:
     def react_command(self, message_json, main_command, sub_command, day):
         if message_json.get('channel') in self.get_im_id_list():
             pass
+        elif message_json.get('channel') in self.get_group_id_list():
+            pass
         elif not self.get_channel_info(message_json.get('channel')).get('is_member', False):
             return
 
@@ -433,8 +435,11 @@ class FactBot:
 
         user_count_dict = defaultdict(lambda: 0)
         im_id_list = self.get_im_id_list()
+        group_id_list = self.get_group_id_list()
         for channel in sorted(list(channel_count_dict.keys())):
             if channel in im_id_list:
+                continue
+            if channel in group_id_list:
                 continue
             if channel == self.notice_channel_id:
                 continue
@@ -486,10 +491,13 @@ class FactBot:
 
     def print_slacking(self):
         im_id_list = self.get_im_id_list()
+        group_id_list = self.get_group_id_list()
         for channel in self.slacking_dict.keys():
             if channel in self.ignore_channel_list:
                 continue
             if channel in im_id_list:
+                continue
+            if channel in group_id_list:
                 continue
             if not self.get_channel_info(channel).get('is_member', False):
                 continue
@@ -625,6 +633,9 @@ class FactBot:
     def get_channel_id_list(self):
         return [channel['id'] for channel in self.slacker.channels.list().body['channels']]
 
+    def get_group_id_list(self):
+        return [group['id'] for group in self.slacker.groups.list().body['groups']]
+
     def get_im_id_list(self):
         return [im['id'] for im in self.slacker.im.list().body['ims']]
 
@@ -675,3 +686,6 @@ class FactBot:
                   'topic': {'creator': 'user id', 'last_set': Unix time, 'value': 'text'}}
         """
         return self.slacker.channels.info(channel=channel_id).body['channel']
+
+    def get_group_info(self, group_id):
+        return self.slacker.groups.info(channel=group_id).body['group']
