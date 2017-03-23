@@ -50,7 +50,7 @@ class FactBot:
         self.status = self.ALIVE
 
         self.eng_space_call = re.compile('[A-Za-z0-9 <>@:_]')
-        self.version = '1.2.3'
+        self.version = '1.2.4'
 
     def run(self):
         async def execute_bot():
@@ -85,7 +85,11 @@ class FactBot:
                             self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
                         return
 
-                    message = await ws.recv()
+                    try:
+                        message = await asyncio.wait_for(ws.recv(), timeout=10.0)
+                    except asyncio.TimeoutError:
+                        continue
+
                     message_json = json.loads(message)
 
                     # Print Slacking
