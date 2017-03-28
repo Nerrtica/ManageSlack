@@ -10,6 +10,7 @@ class Commands:
     def __init__(self, commands_file):
         self.commands = []
         self.commands_file = commands_file
+        self.load()
 
     def get_command(self, full_command):
         full_command = full_command.split(' ')
@@ -41,21 +42,33 @@ class Commands:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] == 'None':
                         return {'is_command': True, 'main_command': main_command, 'sub_command': extra_command}
                 return {'is_command': False}
-        # main command, sub command, contents가 모두 입력됨
+        # main command, sub command, contents가 모두 입력되거나 main command와 contents가 입력됨
         elif len(full_command) == 3:
             sub_command = full_command[1]
             sub_command_idx = self.get_sub_command_index(main_command_idx, sub_command)
             contents = full_command[2]
             if len(sub_command_idx) == 0:
+                for idx in self.get_sub_command_index(main_command_idx, 'None'):
+                    if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
+                        return {'is_command': True, 'main_command': main_command,
+                                'contents': ' '.join(full_command[1:])}
                 return {'is_command': False}
             else:
                 for idx in sub_command_idx:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
                         return {'is_command': True, 'main_command': main_command,
                                 'sub_command': sub_command, 'contents': contents}
-                    return {'is_command': False}
+                return {'is_command': False}
         else:
-            return {'is_command': False}
+            contents = ' '.join(full_command[1:])
+            sub_command_idx = self.get_sub_command_index(main_command_idx, 'None')
+            if len(sub_command_idx) != 0:
+                for idx in sub_command_idx:
+                    if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
+                        return {'is_command': True, 'main_command': main_command, 'contents': contents}
+                return {'is_command': False}
+            else:
+                return {'is_command': False}
 
     def get_main_command_index(self, main_command):
         for i, command in enumerate(self.commands):

@@ -10,6 +10,8 @@ import websockets
 from slacker import Slacker
 from collections import defaultdict
 
+from commands import Commands
+
 
 class FactBot:
     """
@@ -34,10 +36,8 @@ class FactBot:
         self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
         self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
-        self.commands = {'help': 'help', 'ping': 'ping', 'count_auth': 'count',
-                         'print_stats': 'stats', 'die': 'die', 'version': 'version'}
-        self.admin_commands = {'help': 'help', 'die': 'kill', 'restart': 'restart', 'save': 'save',
-                               'load': 'load', 'crawl': 'crawl', 'print': 'print'}
+        self.commands = Commands(self.default_path+'commands.data')
+        self.admin_commands = Commands(self.default_path+'admin_commands.data')
         self.hello_message = 'Factbot Start running!'
         self.error_message = 'Error Error <@nerrtica>'
         self.stop_message = 'Too many Error... <@nerrtica>'
@@ -49,8 +49,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.eng_space_call = re.compile('[A-Za-z0-9 <>@:_]')
-        self.version = '1.2.4'
+        self.version = '1.3.0'
 
     def run(self):
         async def execute_bot():
@@ -105,17 +104,17 @@ class FactBot:
                         self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
                         error_count = 0
 
-                    # Admin Command Message
-                    main_command, sub_command = self.get_admin_command(message_json)
-                    if main_command and (main_command in self.admin_commands.values()):
-                        if self.react_admin_command(message_json, main_command, sub_command, day):
-                            continue
-
-                    # Command Message
-                    main_command, sub_command = self.get_command(message_json)
-                    if main_command and (main_command in self.commands.values()):
-                        if self.react_command(message_json, main_command, sub_command, day):
-                            continue
+                    full_command = self.get_full_command(message_json)
+                    if full_command:
+                        # Admin Command Message
+                        admin_command_info = self.admin_commands.get_command(full_command)
+                        if admin_command_info.get('is_command', False) and message_json.get('user') == self.admin_id:
+                            self.react_admin_command(message_json, admin_command_info, day)
+                        # Command Message
+                        command_info = self.commands.get_command(full_command)
+                        if command_info.get('is_command', False):
+                            self.react_command(message_json, command_info, day)
+                        continue
 
                     # Slacking Count
                     self.slacking_count(message_json)
@@ -142,54 +141,26 @@ class FactBot:
 
             time.sleep(15)
 
-    def get_command(self, message_json):
+    def get_full_command(self, message_json):
         """If a user calls factbot, get bot command string.
 
         :param message_json: Slack message json
-        :return: (command string, subcommand string). if not command, ('', '')
+        :return: full command string
         """
         if message_json.get('type', '') != 'message':
-            return '', ''
+            return None
         if 'subtype' in message_json.keys():
-            return '', ''
+            return None
         if 'bot_id' in message_json.keys():
-            return '', ''
-        if self.eng_space_call.sub('', message_json.get('text', '')).replace('석양이진다빵빵빵', '') != '':
-            return '', ''
+            return None
 
         if message_json.get('text', '')[:8] == 'factbot ':
             full_command = message_json.get('text', '')[8:]
         elif message_json.get('text', '')[:len(self.id)+4] == '<@%s> ' % self.id:
             full_command = message_json.get('text', '')[len(self.id)+4:]
         else:
-            return '', ''
-
-        if full_command.find(' ') == -1:
-            return full_command, ''
-        else:
-            return full_command[:full_command.find(' ')], full_command[full_command.find(' ')+1:]
-
-    def get_admin_command(self, message_json):
-        """If admin calls factbot, get bot command string.
-
-        :param message_json: Slack message json
-        :return: (command string, subcommand string). if not command, ('', '')
-        """
-
-        if message_json.get('type', '') != 'message':
-            return '', ''
-        if 'subtype' in message_json.keys():
-            return '', ''
-        if message_json.get('user') != self.admin_id:
-            return '', ''
-        if message_json.get('text', '')[:8] != 'factbot ':
-            return '', ''
-
-        full_command = message_json.get('text', '')[8:]
-        if full_command.find(' ') == -1:
-            return full_command, ''
-        else:
-            return full_command[:full_command.find(' ')], full_command[full_command.find(' ')+1:]
+            return None
+        return full_command
 
     def slacking_count(self, message_json):
         """Count user's message for Today's Slacking.
@@ -220,7 +191,7 @@ class FactBot:
         hour = time.localtime(float(message_json.get('ts', time.time()))).tm_hour
         self.statistics_dict[message_json.get('channel', '')][hour] += 1
 
-    def react_command(self, message_json, main_command, sub_command, day):
+    def react_command(self, message_json, command_info, day):
         if message_json.get('channel') in self.get_im_id_list():
             pass
         elif message_json.get('channel') in self.get_group_id_list():
@@ -228,144 +199,160 @@ class FactBot:
         elif not self.get_channel_info(message_json.get('channel')).get('is_member', False):
             return
 
-        if main_command == self.commands.get('help'):
-            return self.print_help(message_json, sub_command)
+        main_command = command_info.get('main_command')
 
-        elif main_command == self.commands.get('ping'):
-            if sub_command == '':
-                answer = '<@%s> pong' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
-                return True
-            return False
+        if main_command == 'help':
+            self.print_help(message_json, command_info)
 
-        elif main_command == self.commands.get('count_auth'):
-            return self.swap_count_auth(message_json, sub_command)
-
-        elif main_command == self.commands.get('print_stats'):
-            return self.print_stats(message_json, sub_command, day)
-
-        elif main_command == self.commands.get('die'):
-            if sub_command == '':
-                answer = self.die_messages[random.randrange(len(self.die_messages))]
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
-                return True
-
-            if message_json.get('channel') in self.get_im_id_list():
-                answer = 'This command works only in ' + self.bot_channel_name
-                self.slacker.chat.post_message(message_json.get('channel'), answer, as_user=True)
-                return False
-            if self.get_channel_info(message_json.get('channel'))['name'] != 'zero-bot':
-                return False
-            elif 'add ' in sub_command:
-                if sub_command[4:] in self.die_messages:
-                    answer = '이미 있음'
-                else:
-                    self.die_messages.append(sub_command[4:])
-                    answer = '유언 추가 완료'
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
-                return True
-            elif 'remove ' in sub_command:
-                if sub_command[7:] in self.die_messages:
-                    self.die_messages.remove(sub_command[7:])
-                    answer = '유언 제거'
-                else:
-                    answer = '그런 말 모름'
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
-                return True
-
-        elif main_command == self.commands.get('version'):
-            if sub_command == '':
-                answer = 'Factbot version %s' % self.version
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
-                return True
-        return False
-
-    def react_admin_command(self, message_json, main_command, sub_command, day):
-        if main_command == self.admin_commands.get('help') and sub_command == '나야나':
-            answer = 'help 나야나, kill, restart, save [day], load [day], crawl [day], print slacking'
-            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
-
-        elif main_command == self.admin_commands.get('die') and sub_command == '':
-            self.status = self.DIE
-            return True
-
-        elif main_command == self.admin_commands.get('restart') and sub_command == '':
-            self.status = self.RESTART
-            return True
-
-        elif main_command == self.admin_commands.get('save'):
-            if sub_command == '':
-                sub_command = day
-            self.save_slacking_counts(sub_command)
-            self.save_statistics_counts(sub_command)
-            answer = '%s 카운트 저장 완료' % sub_command
-            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
-            return True
-
-        elif main_command == self.admin_commands.get('load'):
-            if sub_command == '':
-                sub_command = day
-            self.slacking_dict = self.get_slacking_counts(sub_command)
-            self.statistics_dict = self.get_statistics_counts(sub_command)
-            answer = '%s 카운트 로드 완료' % sub_command
-            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
-            return True
-
-        elif main_command == self.admin_commands.get('crawl'):
-            if sub_command == '':
-                sub_command = day
-            self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
-            self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
-            self.get_past_count_history(sub_command)
-            answer = '%s 카운트 크롤링 완료' % sub_command
-            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
-            return True
-
-        elif main_command == self.admin_commands.get('print') and sub_command == 'slacking':
-            self.print_slacking()
-            return True
-        return False
-
-    def print_help(self, message_json, sub_command):
-        if sub_command == '' or sub_command in self.commands.values():
-            if sub_command == '':
-                answer = '※ factbot을 사용하기 위해서는 각 채널에 초대를 하시기 바랍니다.\n\n'
-                answer += 'factbot은 각 채널 별로 매일 가장 슬랙 사용량이 높은 유저를 슬랙왕으로 추대합니다 :innocent: \n'
-                answer += '사용량 통계는 *사용자별, 날짜별 메시지 count* 로만 추정하며, 지난 정보 저장을 위해 로컬에 파일로 저장됩니다.'
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
-
-            answer = ''
-            if sub_command == '' or sub_command == self.commands.get('help'):
-                answer += 'factbot %s - 헬푸미\n' % self.commands.get('help')
-                answer += 'factbot %s <command> - 왓츠 디스 명령어?\n' % self.commands.get('help')
-            if sub_command == '' or sub_command == self.commands.get('ping'):
-                answer += 'factbot %s - 핑퐁핑퐁핑핑퐁퐁\n' % self.commands.get('ping')
-            if sub_command == '' or sub_command == self.commands.get('count_auth'):
-                answer += 'factbot %s stop - 명령어 사용 당사자를 더 이상 count하지 않습니다.\n' % self.commands.get('count_auth')
-                answer += 'factbot %s start - 명령어 사용 당사자를 count하기 시작합니다.\n' % self.commands.get('count_auth')
-            if sub_command == '' or sub_command == self.commands.get('print_stats'):
-                answer += 'factbot %s - 명령어 사용 당사자의 당일 슬랙 사용량을 출력합니다.\n' % self.commands.get('print_stats')
-                answer += 'factbot %s <yyyymmdd> - 명령어 사용 당사자의 해당 일 슬랙 사용량을 출력합니다.\n' % \
-                          self.commands.get('print_stats')
-            if sub_command == '' or sub_command == self.commands.get('version'):
-                answer += 'factbot %s - factbot의 현재 버전을 출력합니다.\n' % self.commands.get('version')
-            if sub_command == '' or sub_command == self.commands.get('die'):
-                answer += 'factbot %s - 네?\n' % self.commands.get('die')
+        elif main_command == 'ping':
+            answer = '<@%s> pong' % message_json.get('user', 'UNDEFINED')
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
 
-            if sub_command == '':
-                answer = '기능 추가 및 버그 수정은 GitHub Repository에 Pull Request로 보내주시기 바랍니다.\n'
-                answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
-            return True
-        elif sub_command != '' and sub_command not in self.commands.values():
-            answer = 'no such command : factbot %s' % sub_command
+        elif main_command == 'count':
+            self.swap_count_auth(message_json, command_info)
+
+        elif main_command == 'stats':
+            self.print_stats(message_json, command_info, day)
+
+        elif main_command == 'die':
+            answer = self.die_messages[random.randrange(len(self.die_messages))]
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
+        elif main_command == 'version':
+            answer = 'Factbot version %s' % self.version
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
+        elif main_command == 'echo':
+            answer = command_info.get('contents')
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
+    def react_admin_command(self, message_json, command_info, day):
+        main_command = command_info.get('main_command')
+
+        if main_command == 'admin':
+            if command_info.get('sub_command') == 'help':
+                self.print_admin_help(message_json, command_info)
+
+        elif main_command == 'kill':
+            self.status = self.DIE
+
+        elif main_command == 'restart':
+            self.status = self.RESTART
+
+        elif main_command == 'save':
+            if command_info.get('contents', '') != '':
+                day = command_info.get('contents')
+            self.save_slacking_counts(day)
+            self.save_statistics_counts(day)
+            answer = '%s 카운트 저장 완료' % day
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
+
+        elif main_command == 'load':
+            if command_info.get('contents', '') != '':
+                day = command_info.get('contents')
+            self.slacking_dict = self.get_slacking_counts(day)
+            self.statistics_dict = self.get_statistics_counts(day)
+            answer = '%s 카운트 로드 완료' % day
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
+
+        elif main_command == 'crawl':
+            if command_info.get('contents', '') != '':
+                day = command_info.get('contents')
+            self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
+            self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
+            self.get_past_count_history(day)
+            answer = '%s 카운트 크롤링 완료' % day
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
+
+        elif main_command == 'print':
+            if command_info.get('sub_command') == 'slacking':
+                self.print_slacking()
+
+        elif main_command == 'echo':
+            contents = command_info.get('contents')
+            channel_id = contents.split(' ')[0][2:contents.find('|')]
+            if channel_id in self.get_channel_id_list():
+                self.slacker.chat.post_message(channel_id, ' '.join(contents.split(' ')[1:]), as_user=True)
+
+    def print_help(self, message_json, command_info):
+        if command_info.get('contents', '') == '':
+            answer = '※ factbot을 사용하기 위해서는 각 채널에 초대를 하시기 바랍니다.\n\n'
+            answer += 'factbot은 각 채널 별로 매일 가장 슬랙 사용량이 높은 유저를 슬랙왕으로 추대합니다 :innocent: \n'
+            answer += '사용량 통계는 *사용자별, 날짜별 메시지 count* 로만 추정하며, 지난 정보 저장을 위해 로컬에 파일로 저장됩니다.'
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
+            answer = ''
+            for command in self.commands.commands:
+                main_command = command['main_command']
+                for sub_info in command['sub_info']:
+                    full_command = main_command
+                    sub_command = sub_info['sub_command']
+                    if sub_command != 'None':
+                        full_command += ' ' + sub_command
+                    contents = sub_info['contents']
+                    if contents != 'None':
+                        full_command += ' ' + contents
+                    answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
+            answer = '기능 추가 및 버그 수정은 GitHub Repository에 Pull Request로 보내주시기 바랍니다.\n'
+            answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
 
         else:
-            return False
+            main_command = command_info.get('contents')
+            command_idx = self.commands.get_main_command_index(main_command)
+            if command_idx != -1:
+                answer = ''
+                for sub_info in self.commands.commands[command_idx]['sub_info']:
+                    full_command = main_command
+                    sub_command = sub_info['sub_command']
+                    if sub_command != 'None':
+                        full_command += ' ' + sub_command
+                    contents = sub_info['contents']
+                    if contents != 'None':
+                        full_command += ' ' + contents
+                    answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
+            else:
+                answer = 'no such command : factbot %s' % main_command
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
 
-    def swap_count_auth(self, message_json, sub_command):
+    def print_admin_help(self, message_json, command_info):
+        if command_info.get('contents', '') == '':
+            answer = ''
+            for command in self.admin_commands.commands:
+                main_command = command['main_command']
+                for sub_info in command['sub_info']:
+                    full_command = main_command
+                    sub_command = sub_info['sub_command']
+                    if sub_command != 'None':
+                        full_command += ' ' + sub_command
+                    contents = sub_info['contents']
+                    if contents != 'None':
+                        full_command += ' ' + contents
+                    answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
+        else:
+            main_command = command_info.get('contents')
+            command_idx = self.admin_commands.get_main_command_index(main_command)
+            if command_idx != -1:
+                answer = ''
+                for sub_info in self.admin_commands.commands[command_idx]['sub_info']:
+                    full_command = main_command
+                    sub_command = sub_info['sub_command']
+                    if sub_command != 'None':
+                        full_command += ' ' + sub_command
+                    contents = sub_info['contents']
+                    if contents != 'None':
+                        full_command += ' ' + contents
+                    answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
+            else:
+                answer = 'no such command : factbot %s' % main_command
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
+    def swap_count_auth(self, message_json, command_info):
+        sub_command = command_info.get('sub_command')
         if sub_command == 'start':
             try:
                 self.ignore_user_list.remove(message_json.get('user'))
@@ -389,11 +376,13 @@ class FactBot:
         else:
             return False
 
-    def print_stats(self, message_json, sub_command, day):
+    def print_stats(self, message_json, command_info, day):
         if self.ignore_user_list.count(message_json.get('user')) != 0:
             answer = '메시지 개수를 저장하지 않는 유저는 사용할 수 없는 기능이에요.'
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
             return True
+
+        sub_command = command_info.get('contents', '')
 
         if sub_command == '' or sub_command == '%s' % day:
             date = day
