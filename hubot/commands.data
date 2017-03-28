@@ -1,0 +1,46 @@
+main_command : help
+sub_command : None
+description : 헬푸미
+contents : None
+
+sub_command : None
+description : 왓츠 디스 명령어?
+contents : <command>
+
+main_command : ping
+sub_command : None
+description : 핑퐁핑퐁핑핑퐁퐁
+contents : None
+
+main_command : count
+sub_command : start
+description : 명령어 사용 당사자를 count하기 시작합니다.
+contents : None
+
+sub_command : stop
+description : 명령어 사용 당사자를 더 이상 count하지 않습니다.
+contents : None
+
+main_command : stats
+sub_command : None
+description : 명령어 사용 당사자의 당일 슬랙 사용량을 출력합니다.
+contents : None
+
+sub_command : None
+description : 명령어 사용 당사자의 해당 일 슬랙 사용량을 출력합니다.
+contents : <yyyymmdd>
+
+main_command : version
+sub_command : None
+description : factbot의 현재 버전을 출력합니다.
+contents : None
+
+main_command : die
+sub_command : None
+description : 네?
+contents : None
+
+main_command : echo
+sub_command : None
+description : 따라쟁이 팩트봇
+contents : <message>
