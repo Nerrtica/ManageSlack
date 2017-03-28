@@ -33,6 +33,15 @@ class FactBot:
         self.id = self.slacker.auth.test().body['user_id']
         self.admin_id = self.get_user_id(admin_name)
 
+        self.kingname_alias = dict()
+        try:
+            with open(self.default_path+'data/kingname_alias.txt', 'r', encoding='utf-8') as f:
+                for line in f.readlines():
+                    line = line.strip().split()
+                    self.kingname_alias[line[0]] = line[1]
+        except FileNotFoundError:
+            pass
+
         self.slacking_dict = defaultdict(lambda: defaultdict(lambda: 0))
         self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
@@ -49,7 +58,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.0'
+        self.version = '1.3.1'
 
     def run(self):
         async def execute_bot():
@@ -213,6 +222,10 @@ class FactBot:
 
         elif main_command == 'stats':
             self.print_stats(message_json, command_info, day)
+
+        elif main_command == 'set':
+            if command_info.get('sub_command') == 'kingname':
+                self.set_kingname(message_json, command_info)
 
         elif main_command == 'die':
             answer = self.die_messages[random.randrange(len(self.die_messages))]
@@ -482,6 +495,22 @@ class FactBot:
         self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
         return True
 
+    def set_kingname(self, message_json, command_info):
+        if command_info.get('contents', '') != '':
+            self.kingname_alias[message_json.get('channel')] = command_info.get('contents')
+            answer = '<#%s> 채널에서 `[오늘의 %s]` 로 슬랙왕 호칭을 변경했어요.' % \
+                     (message_json.get('channel'), command_info.get('contents'))
+        else:
+            if self.kingname_alias.get(message_json.get('channel'), '') != '':
+                del self.kingname_alias[message_json.get('channel')]
+                answer = '<#%s> 채널의 슬랙왕 호칭을 초기화했어요.' % (message_json.get('channel'))
+            else:
+                answer = '아직 <#%s> 채널의 슬랙왕 호칭이 없어요.' % (message_json.get('channel'))
+        with open(self.default_path+'data/kingname_alias.txt', 'w', encoding='utf-8') as f:
+            for c, alias in self.kingname_alias.items():
+                f.write('%s %s\n' % (c, alias))
+        self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+
     def print_slacking(self):
         im_id_list = self.get_im_id_list()
         group_id_list = self.get_group_id_list()
@@ -494,7 +523,10 @@ class FactBot:
                 continue
             if not self.get_channel_info(channel).get('is_member', False):
                 continue
-            bot_say = '[오늘의 <#%s>왕]\n' % channel
+            if self.kingname_alias.get(channel, '') == '':
+                bot_say = '[오늘의 <#%s>왕]\n' % channel
+            else:
+                bot_say = '[오늘의 %s]\n' % self.kingname_alias.get(channel)
 
             ch_count = sorted(self.slacking_dict[channel].items(), key=lambda x: x[1], reverse=True)
             chat_count_sum = sum([i[1] for i in ch_count])

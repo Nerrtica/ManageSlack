@@ -30,6 +30,15 @@ sub_command : None
 description : 명령어 사용 당사자의 해당 일 슬랙 사용량을 출력합니다.
 contents : <yyyymmdd>
 
+main_command : set
+sub_command : kingname
+description : 명령어 사용 채널의 슬랙왕 호칭을 설정합니다.
+contents : <slacking name>
+
+sub_command : kingname
+description : 명령어 사용 채널의 슬랙왕 호칭을 초기화합니다.
+contents : None
+
 main_command : version
 sub_command : None
 description : factbot의 현재 버전을 출력합니다.
