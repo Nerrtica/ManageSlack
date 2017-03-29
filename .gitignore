@@ -75,5 +75,5 @@ __pycache__/*
 
 # Log file
 *.log
-hubot/data/
-hubot/steamers/
+hubot/zeropage/data
+hubot/steamers/data

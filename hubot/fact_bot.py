@@ -1,6 +1,5 @@
 #-*- coding:utf-8 -*-
 
-import re
 import time
 import json
 import random
