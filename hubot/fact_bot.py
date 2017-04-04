@@ -22,6 +22,8 @@ class FactBot:
         self.slacker = Slacker(self.token)
         self.default_path = default_path
         self.bot_channel_name = bot_channel_name
+        self.bot_channel_id = [c_id['id'] for c_id in self.slacker.channels.list().body['channels']
+                               if c_id['name'] == bot_channel_name[1:]][0]
         self.notice_channel_name = notice_channel_name
         self.notice_channel_id = [c_id['id'] for c_id in self.slacker.channels.list().body['channels']
                                   if c_id['name'] == notice_channel_name[1:]][0]
@@ -74,7 +76,7 @@ class FactBot:
                 self.slacking_dict = self.get_slacking_counts(day)
             if len(list(self.statistics_dict.keys())) == 0:
                 self.statistics_dict = self.get_statistics_counts(day)
-            self.slacker.chat.post_message(self.notice_channel_name, self.hello_message, as_user=True)
+            self.slacker.chat.post_message(self.notice_channel_id, self.hello_message, as_user=True)
             message_json = {}
 
             while True:
@@ -83,7 +85,7 @@ class FactBot:
 
                 try:
                     if error_count >= 5:
-                        self.slacker.chat.post_message(self.notice_channel_name, self.stop_message, as_user=True)
+                        self.slacker.chat.post_message(self.notice_channel_id, self.stop_message, as_user=True)
                         self.save_slacking_counts(day)
                         self.save_statistics_counts(day)
                         if now.tm_mday != today:
@@ -129,7 +131,7 @@ class FactBot:
                     self.statistics_count(message_json)
 
                 except:
-                    self.slacker.chat.post_message(self.notice_channel_name, self.error_message, as_user=True)
+                    self.slacker.chat.post_message(self.notice_channel_id, self.error_message, as_user=True)
                     for im in self.slacker.im.list().body['ims']:
                         if im['user'] == self.admin_id:
                             self.slacker.chat.post_message(im['id'], str(message_json), as_user=True)
@@ -144,7 +146,7 @@ class FactBot:
             asyncio.get_event_loop().run_until_complete(execute_bot())
 
             if self.status == self.DIE:
-                self.slacker.chat.post_message(self.notice_channel_name, self.kill_message, as_user=True)
+                self.slacker.chat.post_message(self.notice_channel_id, self.kill_message, as_user=True)
                 return
 
             time.sleep(15)
@@ -214,7 +216,7 @@ class FactBot:
 
         elif main_command == 'ping':
             answer = '<@%s> pong' % message_json.get('user', 'UNDEFINED')
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         elif main_command == 'count':
             self.swap_count_auth(message_json, command_info)
@@ -228,15 +230,15 @@ class FactBot:
 
         elif main_command == 'die':
             answer = self.die_messages[random.randrange(len(self.die_messages))]
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         elif main_command == 'version':
             answer = 'Factbot version %s' % self.version
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         elif main_command == 'echo':
             answer = command_info.get('contents')
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
     def react_admin_command(self, message_json, command_info, day):
         main_command = command_info.get('main_command')
@@ -257,7 +259,7 @@ class FactBot:
             self.save_slacking_counts(day)
             self.save_statistics_counts(day)
             answer = '%s 카운트 저장 완료' % day
-            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_id), answer, as_user=True)
 
         elif main_command == 'load':
             if command_info.get('contents', '') != '':
@@ -265,7 +267,7 @@ class FactBot:
             self.slacking_dict = self.get_slacking_counts(day)
             self.statistics_dict = self.get_statistics_counts(day)
             answer = '%s 카운트 로드 완료' % day
-            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_id), answer, as_user=True)
 
         elif main_command == 'crawl':
             if command_info.get('contents', '') != '':
@@ -274,7 +276,7 @@ class FactBot:
             self.statistics_dict = defaultdict(lambda: defaultdict(lambda: 0))
             self.get_past_count_history(day)
             answer = '%s 카운트 크롤링 완료' % day
-            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_id), answer, as_user=True)
 
         elif main_command == 'print':
             if command_info.get('sub_command') == 'slacking':
@@ -291,7 +293,7 @@ class FactBot:
             answer = '※ factbot을 사용하기 위해서는 각 채널에 초대를 하시기 바랍니다.\n\n'
             answer += 'factbot은 각 채널 별로 매일 가장 슬랙 사용량이 높은 유저를 슬랙왕으로 추대합니다 :innocent: \n'
             answer += '사용량 통계는 *사용자별, 날짜별 메시지 count* 로만 추정하며, 지난 정보 저장을 위해 로컬에 파일로 저장됩니다.'
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
             answer = ''
             for command in self.commands.commands:
@@ -305,11 +307,11 @@ class FactBot:
                     if contents != 'None':
                         full_command += ' ' + contents
                     answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
             answer = '기능 추가 및 버그 수정은 GitHub Repository에 Pull Request로 보내주시기 바랍니다.\n'
             answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         else:
             main_command = command_info.get('contents')
@@ -327,7 +329,7 @@ class FactBot:
                     answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
             else:
                 answer = 'no such command : factbot %s' % main_command
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
     def print_admin_help(self, message_json, command_info):
         if command_info.get('contents', '') == '':
@@ -343,7 +345,7 @@ class FactBot:
                     if contents != 'None':
                         full_command += ' ' + contents
                     answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         else:
             main_command = command_info.get('contents')
@@ -361,7 +363,7 @@ class FactBot:
                     answer += 'factbot %s - %s\n' % (full_command, sub_info['description'])
             else:
                 answer = 'no such command : factbot %s' % main_command
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
     def swap_count_auth(self, message_json, command_info):
         sub_command = command_info.get('sub_command')
@@ -370,20 +372,20 @@ class FactBot:
                 self.ignore_user_list.remove(message_json.get('user'))
                 self.save_ignore_user_list()
                 answer = '다시 <@%s> 님의 메시지 개수를 저장하기 시작했어요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             except ValueError:
                 answer = '이미 <@%s> 님의 메시지 개수를 저장하고 있어요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
         elif sub_command == 'stop':
             if self.ignore_user_list.count(message_json.get('user')) == 0:
                 self.ignore_user_list.append(message_json.get('user'))
                 self.save_ignore_user_list()
                 answer = '더 이상 <@%s> 님의 메시지 개수를 저장하지 않아요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             else:
                 answer = '이미 <@%s> 님의 메시지 개수를 저장하지 않고 있어요.' % message_json.get('user', 'UNDEFINED')
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
         else:
             return False
@@ -391,7 +393,7 @@ class FactBot:
     def print_stats(self, message_json, command_info, day):
         if self.ignore_user_list.count(message_json.get('user')) != 0:
             answer = '메시지 개수를 저장하지 않는 유저는 사용할 수 없는 기능이에요.'
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
 
         sub_command = command_info.get('contents', '')
@@ -413,13 +415,13 @@ class FactBot:
 
                 if int(date[:4]) < 2017:
                     answer = '그 때는 제가 태어나기 전이라구요 :sob:'
-                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name),
+                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id),
                                                    answer, as_user=True)
                     return True
 
                 elif int(date) > int(day):
                     answer = '뭐에요, 저보고 미래라도 보라는 건가요?'
-                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name),
+                    self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id),
                                                    answer, as_user=True)
                     return True
 
@@ -427,12 +429,12 @@ class FactBot:
 
             except ValueError:
                 answer = '제대로 된 포맷으로 적어주세요. <YYYYMMDD>'
-                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
                 return True
 
         else:
             answer = '제대로 된 포맷으로 적어주세요. <YYYYMMDD>'
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
 
         answer = '<@%s> 님의 %s년 %s월 %s일 통계에요.\n\n' % \
@@ -471,7 +473,7 @@ class FactBot:
 
         if user_count_dict[message_json.get('user')] == 0:
             answer += '해당 날짜의 메시지 카운트 정보가 없어요.'
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
 
         all_count = sorted(user_count_dict.items(), key=lambda x: x[1], reverse=True)
@@ -491,7 +493,7 @@ class FactBot:
                    ranks[[i[0] for i in all_count].index(message_json.get('user'))],
                    user_count_dict[message_json.get('user')] / sum([i[1] for i in all_count]) * 100)
 
-        self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+        self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
         return True
 
     def set_kingname(self, message_json, command_info):
@@ -508,7 +510,7 @@ class FactBot:
         with open(self.default_path+'data/kingname_alias.txt', 'w', encoding='utf-8') as f:
             for c, alias in self.kingname_alias.items():
                 f.write('%s %s\n' % (c, alias))
-        self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_name), answer, as_user=True)
+        self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
     def print_slacking(self):
         im_id_list = self.get_im_id_list()
