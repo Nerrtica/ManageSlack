@@ -1,0 +1,55 @@
+main_command : admin
+sub_command : help
+description : admin용 명령어 목록을 출력합니다.
+contents : None
+
+sub_command : help
+description : 왓츠 디스 어드민 명령어?
+contents : <command>
+
+main_command : kill
+sub_command : None
+description : 팩트봇을 다운시킵니다.
+contents : None
+
+main_command : restart
+sub_command : None
+description : 팩트봇을 재시작합니다.
+contents : None
+
+main_command : save
+sub_command : None
+description : 오늘자 count dict를 저장합니다.
+contents : None
+
+sub_command : None
+description : 해당 날짜 count dict를 저장합니다.
+contents : <yyyymmdd>
+
+main_command : load
+sub_command : None
+description : 오늘자 count dict를 파일에서 읽어옵니다.
+contents : None
+
+sub_command : None
+description : 해당 날짜 count dict를 파일에서 읽어옵니다.
+contents : <yyyymmdd>
+
+main_command : crawl
+sub_command : None
+description : 오늘 메시지 count를 슬랙 서버에서 읽어옵니다.
+contents : None
+
+sub_command : None
+description : 해당 날짜 메시지 count를 슬랙 서버에서 읽어옵니다.
+contents : <yyyymmdd>
+
+main_command : print
+sub_command : slacking
+description : 저장된 count dict로 오늘의 슬랙왕을 슬랙에 전송합니다.
+contents : None
+
+main_command : echo
+sub_command : None
+description : 해당 채널에 메시지를 전송합니다.
+contents : #channel <message>
