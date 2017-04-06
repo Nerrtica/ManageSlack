@@ -59,7 +59,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.1'
+        self.version = '1.3.2'
 
     def run(self):
         async def execute_bot():
@@ -497,6 +497,21 @@ class FactBot:
         return True
 
     def set_kingname(self, message_json, command_info):
+        im_id_list = self.get_im_id_list()
+        group_id_list = self.get_group_id_list()
+        if message_json.get('channel') in im_id_list:
+            answer = '저와의 DM에서 슬랙왕은 언제나 <@%s>, 당신이랍니다 :pika_wink:' % message_json.get('user')
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
+        if message_json.get('channel') in group_id_list:
+            answer = 'private channel에서는 오늘의 슬랙왕이 출력되지 않아요 :sob:'
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
+        if message_json.get('channel') in self.ignore_channel_list:
+            answer = '<#%s> 채널에서는 오늘의 슬랙왕이 출력되지 않아요 :sob:' % message_json.get('channel')
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
+
         if command_info.get('contents', '') != '':
             self.kingname_alias[message_json.get('channel')] = command_info.get('contents')
             answer = '<#%s> 채널에서 `[오늘의 %s]` 로 슬랙왕 호칭을 변경했어요.' % \
