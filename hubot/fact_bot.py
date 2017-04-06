@@ -698,6 +698,10 @@ class FactBot:
                 end_unix_sec = '%.6f' % (float(channel_history['messages'][-1].get('ts', 1)) - 0.00001)
 
     def save_ignore_channel_list(self):
+        if self.bot_channel_id not in self.ignore_channel_list:
+            self.ignore_channel_list.append(self.bot_channel_id)
+        if self.notice_channel_id not in self.ignore_channel_list:
+            self.ignore_channel_list.append(self.notice_channel_id)
         with open(self.default_path+'data/ignore_channel_list.txt', 'w') as f:
             for channel in self.ignore_channel_list:
                 f.write('%s\n' % channel)
@@ -705,6 +709,10 @@ class FactBot:
     def load_ignore_channel_list(self):
         with open(self.default_path+'data/ignore_channel_list.txt', 'r') as f:
             self.ignore_channel_list = [line.strip() for line in f.readlines()]
+        if self.bot_channel_id not in self.ignore_channel_list:
+            self.ignore_channel_list.append(self.bot_channel_id)
+        if self.notice_channel_id not in self.ignore_channel_list:
+            self.ignore_channel_list.append(self.notice_channel_id)
 
     def save_ignore_user_list(self):
         with open(self.default_path+'data/ignore_user_list.txt', 'w') as f:
