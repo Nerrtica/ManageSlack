@@ -21,6 +21,15 @@ sub_command : stop
 description : 명령어 사용 당사자를 더 이상 count하지 않습니다.
 contents : None
 
+main_command : mute
+sub_command : on
+description : 명령어 사용 채널에서 오늘의 슬랙왕을 출력하지 않습니다.
+contents : None
+
+sub_command : off
+description : 명령어 사용 채널에서 오늘의 슬랙왕을 출력합니다.
+contents : None
+
 main_command : stats
 sub_command : None
 description : 명령어 사용 당사자의 당일 슬랙 사용량을 출력합니다.

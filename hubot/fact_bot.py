@@ -59,7 +59,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.3'
+        self.version = '1.3.4'
 
     def run(self):
         async def execute_bot():
@@ -220,6 +220,9 @@ class FactBot:
 
         elif main_command == 'count':
             self.swap_count_auth(message_json, command_info)
+
+        elif main_command == 'mute':
+            self.swap_ignore_channel(message_json, command_info)
 
         elif main_command == 'stats':
             self.print_stats(message_json, command_info, day)
@@ -397,6 +400,42 @@ class FactBot:
             return True
         else:
             return False
+
+    def swap_ignore_channel(self, message_json, command_info):
+        im_id_list = self.get_im_id_list()
+        group_id_list = self.get_group_id_list()
+        if message_json.get('channel') in im_id_list:
+            answer = '저와의 DM에서 슬랙왕은 언제나 <@%s> 님이기 때문에 굳이 말하지 않아요 :pika_wink:' % message_json.get('user')
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
+        if message_json.get('channel') in group_id_list:
+            answer = 'private channel에서는 오늘의 슬랙왕이 출력되지 않아요 :sob:'
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
+
+        sub_command = command_info.get('sub_command')
+        if sub_command == 'off':
+            try:
+                self.ignore_channel_list.remove(message_json.get('channel'))
+                self.save_ignore_channel_list()
+                answer = '다시 <#%s> 채널에서 오늘의 슬랙왕을 출력할게요.' % message_json.get('channel')
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            except ValueError:
+                answer = '이미 <#@s> 채널에서 오늘의 슬랙왕을 출력하고 있어요.' % message_json.get('channel')
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
+        elif sub_command == 'on':
+            if self.ignore_user_list.count(message_json.get('user')) == 0:
+                self.ignore_user_list.append(message_json.get('user'))
+                self.save_ignore_user_list()
+                answer = '더 이상 <#%s> 채널에서 오늘의 슬랙왕을 출력하지 않아요.' % message_json.get('channel')
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            else:
+                answer = '이미 <#%s> 채널에서 오늘의 슬랙왕을 출력하지 않고 있어요.' % message_json.get('channel')
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
+        else:
+            return
 
     def print_stats(self, message_json, command_info, day):
         if self.ignore_user_list.count(message_json.get('user')) != 0:
