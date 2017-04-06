@@ -238,7 +238,7 @@ class FactBot:
                     answer = '<#%s> 채널의 슬랙왕 호칭은 %s에요.' % \
                              (message_json.get('channel'), self.kingname_alias[message_json.get('channel')])
                 elif message_json.get('channel') in im_id_list:
-                    answer = '<@%s>! 언제나 당신이 슬랙왕인데 다른게 필요한가요? :pika_smile:'
+                    answer = '<@%s>! 언제나 당신이 슬랙왕인데 다른게 필요한가요? :pika_smile:' % message_json.get('user')
                 elif message_json.get('channel') in group_id_list:
                     answer = 'private channel에서는 슬랙왕이 출력되지 않아요 :sob:'
                 else:
