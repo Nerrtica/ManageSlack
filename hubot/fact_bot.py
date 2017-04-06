@@ -425,8 +425,8 @@ class FactBot:
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return
         elif sub_command == 'on':
-            if self.ignore_channel_list.count(message_json.get('user')) == 0:
-                self.ignore_channel_list.append(message_json.get('user'))
+            if self.ignore_channel_list.count(message_json.get('channel')) == 0:
+                self.ignore_channel_list.append(message_json.get('channel'))
                 self.save_ignore_channel_list()
                 answer = '더 이상 <#%s> 채널에서 오늘의 슬랙왕을 출력하지 않아요.' % message_json.get('channel')
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
