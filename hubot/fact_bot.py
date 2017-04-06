@@ -59,7 +59,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.2'
+        self.version = '1.3.3'
 
     def run(self):
         async def execute_bot():
@@ -224,9 +224,17 @@ class FactBot:
         elif main_command == 'stats':
             self.print_stats(message_json, command_info, day)
 
-        elif main_command == 'set':
-            if command_info.get('sub_command') == 'kingname':
+        elif main_command == 'kingname':
+            sub_command = command_info.get('sub_command')
+            if sub_command == 'set' or sub_command == 'init':
                 self.set_kingname(message_json, command_info)
+            elif sub_command == 'show':
+                if self.kingname_alias.get(message_json.get('channel'), '') != '':
+                    answer = '<#%s> 채널의 슬랙왕 호칭은 %s에요.' % \
+                             (message_json.get('channel'), self.kingname_alias[message_json.get('channel')])
+                else:
+                    answer = '아직 <#%s> 채널의 슬랙왕 호칭이 없어요.' % (message_json.get('channel'))
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         elif main_command == 'die':
             answer = self.die_messages[random.randrange(len(self.die_messages))]
