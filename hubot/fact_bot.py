@@ -170,7 +170,7 @@ class FactBot:
             full_command = message_json.get('text', '')[len(self.id)+4:]
         else:
             return None
-        return full_command
+        return full_command.strip()
 
     def slacking_count(self, message_json):
         """Count user's message for Today's Slacking.
