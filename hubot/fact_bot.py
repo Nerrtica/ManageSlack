@@ -59,7 +59,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.4'
+        self.version = '1.3.5'
 
     def run(self):
         async def execute_bot():
@@ -232,9 +232,15 @@ class FactBot:
             if sub_command == 'set' or sub_command == 'init':
                 self.set_kingname(message_json, command_info)
             elif sub_command == 'show':
+                im_id_list = self.get_im_id_list()
+                group_id_list = self.get_group_id_list()
                 if self.kingname_alias.get(message_json.get('channel'), '') != '':
                     answer = '<#%s> 채널의 슬랙왕 호칭은 %s에요.' % \
                              (message_json.get('channel'), self.kingname_alias[message_json.get('channel')])
+                elif message_json.get('channel') in im_id_list:
+                    answer = '<@%s>! 언제나 당신이 슬랙왕인데 다른게 필요한가요? :pika_smile:'
+                elif message_json.get('channel') in group_id_list:
+                    answer = 'private channel에서는 슬랙왕이 출력되지 않아요 :sob:'
                 else:
                     answer = '아직 <#%s> 채널의 슬랙왕 호칭이 없어요.' % (message_json.get('channel'))
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
