@@ -59,15 +59,26 @@ class Commands:
                         return {'is_command': True, 'main_command': main_command,
                                 'sub_command': sub_command, 'contents': contents}
                 return {'is_command': False}
+        # main command와 띄어쓰기를 포함한 contents가 입력됨
         else:
-            contents = ' '.join(full_command[1:])
-            sub_command_idx = self.get_sub_command_index(main_command_idx, 'None')
-            if len(sub_command_idx) != 0:
+            sub_command = full_command[1]
+            sub_command_idx = self.get_sub_command_index(main_command_idx, sub_command)
+            if len(sub_command_idx) == 0:
+                contents = ' '.join(full_command[1:])
+                sub_command_idx = self.get_sub_command_index(main_command_idx, 'None')
+                if len(sub_command_idx) != 0:
+                    for idx in sub_command_idx:
+                        if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
+                            return {'is_command': True, 'main_command': main_command, 'contents': contents}
+                    return {'is_command': False}
+                else:
+                    return {'is_command': False}
+            else:
+                contents = ' '.join(full_command[2:])
                 for idx in sub_command_idx:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
-                        return {'is_command': True, 'main_command': main_command, 'contents': contents}
-                return {'is_command': False}
-            else:
+                        return {'is_command': True, 'main_command': main_command,
+                                'sub_command': sub_command, 'contents': contents}
                 return {'is_command': False}
 
     def get_main_command_index(self, main_command):
