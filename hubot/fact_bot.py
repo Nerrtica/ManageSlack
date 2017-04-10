@@ -418,6 +418,10 @@ class FactBot:
             answer = 'private channel에서는 오늘의 슬랙왕이 출력되지 않아요 :sob:'
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return
+        if message_json.get('channel') == self.bot_channel_id or message_json.get('channel') == self.notice_channel_id:
+            answer = '관리 채널에서는 사용할 수 없는 명령어입니다.'
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
 
         sub_command = command_info.get('sub_command')
         if sub_command == 'off':
@@ -560,6 +564,10 @@ class FactBot:
             answer = 'private channel에서는 오늘의 슬랙왕이 출력되지 않아요 :sob:'
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return
+        if message_json.get('channel') == self.bot_channel_id or message_json.get('channel') == self.notice_channel_id:
+            answer = '관리 채널에서는 사용할 수 없는 명령어입니다.'
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return
         if message_json.get('channel') in self.ignore_channel_list:
             answer = '<#%s> 채널에서는 오늘의 슬랙왕이 출력되지 않아요 :sob:' % message_json.get('channel')
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
@@ -584,6 +592,8 @@ class FactBot:
         im_id_list = self.get_im_id_list()
         group_id_list = self.get_group_id_list()
         for channel in self.slacking_dict.keys():
+            if channel == self.bot_channel_id or channel == self.notice_channel_id:
+                continue
             if channel in self.ignore_channel_list:
                 continue
             if channel in im_id_list:
@@ -704,10 +714,6 @@ class FactBot:
                 end_unix_sec = '%.6f' % (float(channel_history['messages'][-1].get('ts', 1)) - 0.00001)
 
     def save_ignore_channel_list(self):
-        if self.bot_channel_id not in self.ignore_channel_list:
-            self.ignore_channel_list.append(self.bot_channel_id)
-        if self.notice_channel_id not in self.ignore_channel_list:
-            self.ignore_channel_list.append(self.notice_channel_id)
         with open(self.default_path+'data/ignore_channel_list.txt', 'w') as f:
             for channel in self.ignore_channel_list:
                 f.write('%s\n' % channel)
@@ -715,10 +721,6 @@ class FactBot:
     def load_ignore_channel_list(self):
         with open(self.default_path+'data/ignore_channel_list.txt', 'r') as f:
             self.ignore_channel_list = [line.strip() for line in f.readlines()]
-        if self.bot_channel_id not in self.ignore_channel_list:
-            self.ignore_channel_list.append(self.bot_channel_id)
-        if self.notice_channel_id not in self.ignore_channel_list:
-            self.ignore_channel_list.append(self.notice_channel_id)
 
     def save_ignore_user_list(self):
         with open(self.default_path+'data/ignore_user_list.txt', 'w') as f:
