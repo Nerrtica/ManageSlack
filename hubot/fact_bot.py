@@ -59,7 +59,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.5'
+        self.version = '1.3.6'
 
     def run(self):
         async def execute_bot():
@@ -680,6 +680,8 @@ class FactBot:
                 return
             if 'bot_id' in message_json.keys():
                 return
+            if message_json.get('user') in self.ignore_user_list:
+                return
 
             self.slacking_dict[chan][message_json.get('user', '')] += 1
 
@@ -689,6 +691,8 @@ class FactBot:
             if 'subtype' in message_json.keys():
                 return
             if 'bot_id' in message_json.keys():
+                return
+            if message_json.get('user') in self.ignore_user_list:
                 return
 
             hour = time.localtime(float(message_json.get('ts', time.time()))).tm_hour
