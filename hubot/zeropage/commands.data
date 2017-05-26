@@ -50,7 +50,7 @@ contents : <yyyymmdd> [#channel]
 main_command : keyword
 sub_command : add
 description : 해당 키워드에 반응하여 팩트봇이 할 말을 추가합니다.
-contents : <keyword> <"sentence">
+contents : <keyword> / <sentence>
 
 sub_command : show
 description : 해당 키워드에 반응하여 팩트봇이 하는 말의 리스트를 출력합니다.
@@ -58,7 +58,7 @@ contents : <keyword>
 
 sub_command : delete
 description : 해당 키워드에 더 이상 팩트봇이 반응하지 않습니다.
-contents : <keyword> <"sentence">
+contents : <keyword> / <sentence>
 
 main_command : kingname
 sub_command : set
