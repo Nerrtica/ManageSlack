@@ -72,7 +72,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.1'
+        self.version = '1.4.2'
 
     def run(self):
         async def execute_bot():
@@ -270,7 +270,7 @@ class FactBot:
                 keyword = command_info.get('contents')
                 replies = self.keywords.get(keyword.replace(' ', ''), [])
                 if len(replies) == 0:
-                    answer = '%s 키워드에 대한 리액션이 존재하지 않아요.'
+                    answer = '%s 키워드에 대한 리액션이 존재하지 않아요.' % keyword
                 else:
                     answer = ''
                     for i, reply in enumerate(replies):
