@@ -72,7 +72,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.0'
+        self.version = '1.4.1'
 
     def run(self):
         async def execute_bot():
@@ -133,6 +133,7 @@ class FactBot:
                         admin_command_info = self.admin_commands.get_command(full_command)
                         if admin_command_info.get('is_command', False) and message_json.get('user') == self.admin_id:
                             self.react_admin_command(message_json, admin_command_info, day)
+                            continue
                         # Command Message
                         command_info = self.commands.get_command(full_command)
                         if command_info.get('is_command', False):
