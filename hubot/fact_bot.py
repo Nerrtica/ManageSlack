@@ -59,7 +59,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.6'
+        self.version = '1.3.7'
 
     def run(self):
         async def execute_bot():
@@ -453,20 +453,40 @@ class FactBot:
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
 
-        sub_command = command_info.get('contents', '')
+        sub_command = command_info.get('contents', '').split(' ')
+        if len(sub_command) == 1:
+            if sub_command[0][:2] == '<#' and sub_command[0][-1] == '>':
+                channel_id = sub_command[0][2:-1].split('|')[0]
+                date = ''
+            else:
+                channel_id = None
+                date = sub_command[0]
+        elif len(sub_command) == 2:
+            if sub_command[0][:2] == '<#' and sub_command[0][-1] == '>':
+                channel_id = sub_command[0][2:-1].split('|')[0]
+                date = sub_command[1]
+            elif sub_command[1][:2] == '<#' and sub_command[1][-1] == '>':
+                channel_id = sub_command[1][2:-1].split('|')[0]
+                date = sub_command[0]
+            else:
+                answer = '제대로 된 포맷으로 적어주세요. (사용법을 모르신다면 `factbot help stats`!)'
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+                return True
+        else:
+            answer = '제대로 된 포맷으로 적어주세요. (사용법을 모르신다면 `factbot help stats`!)'
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            return True
 
-        if sub_command == '' or sub_command == '%s' % day:
+        if date == '' or date == '%s' % day:
             date = day
             channel_count_dict = self.slacking_dict
 
         # easter egg
-        elif sub_command == '석양이진다빵빵빵':
+        elif date == '석양이진다빵빵빵':
             date = '석양이진다빵빵빵'
             channel_count_dict = defaultdict(lambda: defaultdict(lambda: 0))
 
-        elif len(sub_command) == 8:
-            date = sub_command
-
+        elif len(date) == 8:
             try:
                 _ = datetime.datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
 
@@ -485,12 +505,12 @@ class FactBot:
                 channel_count_dict = self.get_slacking_counts(date)
 
             except ValueError:
-                answer = '제대로 된 포맷으로 적어주세요. <YYYYMMDD>'
+                answer = '제대로 된 포맷으로 적어주세요. (사용법을 모르신다면 `factbot help stats`!)'
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
                 return True
 
         else:
-            answer = '제대로 된 포맷으로 적어주세요. <YYYYMMDD>'
+            answer = '제대로 된 포맷으로 적어주세요. (사용법을 모르신다면 `factbot help stats`!)'
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
 
@@ -501,6 +521,8 @@ class FactBot:
         im_id_list = self.get_im_id_list()
         group_id_list = self.get_group_id_list()
         for channel in sorted(list(channel_count_dict.keys())):
+            if channel_id and channel != channel_id:
+                continue
             if channel in im_id_list:
                 continue
             if channel in group_id_list:
@@ -533,22 +555,23 @@ class FactBot:
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
             return True
 
-        all_count = sorted(user_count_dict.items(), key=lambda x: x[1], reverse=True)
+        if not channel_id:
+            all_count = sorted(user_count_dict.items(), key=lambda x: x[1], reverse=True)
 
-        ranks = []
-        before_count = all_count[0][1]
-        rank = 1
-        ranks.append(rank)
-        for i, count in enumerate(all_count[1:]):
-            if count[1] != before_count:
-                before_count = count[1]
-                rank = i + 2
+            ranks = []
+            before_count = all_count[0][1]
+            rank = 1
             ranks.append(rank)
+            for i, count in enumerate(all_count[1:]):
+                if count[1] != before_count:
+                    before_count = count[1]
+                    rank = i + 2
+                ranks.append(rank)
 
-        answer += '\n전체 %d회 (%d위, 점유율 %d%%)\n' % \
-                  (user_count_dict[message_json.get('user')],
-                   ranks[[i[0] for i in all_count].index(message_json.get('user'))],
-                   user_count_dict[message_json.get('user')] / sum([i[1] for i in all_count]) * 100)
+            answer += '\n전체 %d회 (%d위, 점유율 %d%%)\n' % \
+                      (user_count_dict[message_json.get('user')],
+                       ranks[[i[0] for i in all_count].index(message_json.get('user'))],
+                       user_count_dict[message_json.get('user')] / sum([i[1] for i in all_count]) * 100)
 
         self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
         return True
