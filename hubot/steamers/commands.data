@@ -47,6 +47,19 @@ sub_command : None
 description : 명령어 사용 당사자의 해당 일 해당 채널 슬랙 사용량을 출력합니다.
 contents : <yyyymmdd> [#channel]
 
+main_command : keyword
+sub_command : add
+description : 해당 키워드에 반응하여 팩트봇이 할 말을 추가합니다.
+contents : <keyword> / <sentence>
+
+sub_command : show
+description : 해당 키워드에 반응하여 팩트봇이 하는 말의 리스트를 출력합니다.
+contents : <keyword>
+
+sub_command : delete
+description : 해당 키워드에 더 이상 팩트봇이 반응하지 않습니다.
+contents : <keyword> / <sentence>
+
 main_command : kingname
 sub_command : set
 description : 명령어 사용 채널의 슬랙왕 호칭을 설정합니다.

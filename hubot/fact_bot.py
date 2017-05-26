@@ -34,6 +34,19 @@ class FactBot:
         self.id = self.slacker.auth.test().body['user_id']
         self.admin_id = self.get_user_id(admin_name)
 
+        self.keywords = defaultdict(lambda: set())
+        try:
+            with open(self.default_path+'data/keyword_list.txt', 'r', encoding='utf-8') as f:
+                keyword = 'NONE'
+                for line in f.readlines():
+                    line = line.strip()
+                    if line[:10] == 'keyword : ':
+                        keyword = line[10:]
+                    elif line != '':
+                        self.keywords[keyword].add(line)
+        except FileNotFoundError:
+            pass
+
         self.kingname_alias = dict()
         try:
             with open(self.default_path+'data/kingname_alias.txt', 'r', encoding='utf-8') as f:
@@ -59,7 +72,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.3.7'
+        self.version = '1.4.0'
 
     def run(self):
         async def execute_bot():
@@ -126,6 +139,16 @@ class FactBot:
                             self.react_command(message_json, command_info, day)
                         continue
 
+                    if self.is_keyword(message_json):
+                        keyword = message_json.get('text')[1:].replace(' ', '')
+                        replies = self.keywords.get(keyword)
+                        if len(replies) == 0:
+                            pass
+                        else:
+                            answer = list(replies)[random.randrange(len(replies))]
+                            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id),
+                                                           answer, as_user=True)
+
                     # Slacking Count
                     self.slacking_count(message_json)
                     self.statistics_count(message_json)
@@ -171,6 +194,17 @@ class FactBot:
         else:
             return None
         return full_command.strip()
+
+    def is_keyword(self, message_json):
+        if message_json.get('type') != 'message':
+            return False
+        if 'subtype' in message_json.keys():
+            return False
+        if 'bot_id' in message_json.keys():
+            return False
+        if message_json.get('text', '')[0] == '!' \
+                and message_json.get('text', '')[1:].replace(' ', '') in self.keywords.keys():
+            return True
 
     def slacking_count(self, message_json):
         """Count user's message for Today's Slacking.
@@ -226,6 +260,21 @@ class FactBot:
 
         elif main_command == 'stats':
             self.print_stats(message_json, command_info, day)
+
+        elif main_command == 'keyword':
+            sub_command = command_info.get('sub_command')
+            if sub_command == 'add' or sub_command == 'delete':
+                self.manage_keyword(message_json, command_info)
+            elif sub_command == 'show':
+                keyword = command_info.get('contents')
+                replies = self.keywords.get(keyword.replace(' ', ''), [])
+                if len(replies) == 0:
+                    answer = '%s 키워드에 대한 리액션이 존재하지 않아요.'
+                else:
+                    answer = ''
+                    for i, reply in enumerate(replies):
+                        answer += '%d : %s\n' % (i+1, reply)
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         elif main_command == 'kingname':
             sub_command = command_info.get('sub_command')
@@ -575,6 +624,42 @@ class FactBot:
 
         self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
         return True
+
+    def manage_keyword(self, message_json, command_info):
+        contents = command_info.get('contents').split(' / ')
+        if len(contents) > 2:
+            contents[1] = ' / '.join(contents[1:])
+            del contents[2:]
+        if len(contents) != 2:
+            answer = '제대로 된 포맷으로 입력해주세요. <keyword> / <sentence>'
+        else:
+            keyword = contents[0]
+            reply = contents[1]
+
+            sub_command = command_info.get('sub_command')
+            if sub_command == 'add':
+                self.keywords[keyword.replace(' ', '')].add(reply)
+                answer = '%s 키워드에 %s 리액션을 추가했어요.' % (keyword, reply)
+            elif sub_command == 'delete':
+                if keyword.replace(' ', '') not in self.keywords.keys():
+                    answer = '%s 키워드에 대한 리액션이 존재하지 않아요.' % keyword
+                else:
+                    try:
+                        self.keywords[keyword.replace(' ', '')].remove(reply)
+                        answer = '%s 키워드에 대한 %s 리액션을 삭제했어요.' % (keyword, reply)
+                    except KeyError:
+                        answer = '%s 키워드에 대한 %s 리액션이 존재하지 않아요.' % (keyword, reply)
+            else:
+                return
+
+        with open(self.default_path+'data/keyword_list.txt', 'w', encoding='utf-8') as f:
+            for keyword, replies in self.keywords.items():
+                if len(replies) == 0:
+                    continue
+                f.write('keyword : %s\n' % keyword)
+                for reply in replies:
+                    f.write('%s\n' % reply)
+        self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
     def set_kingname(self, message_json, command_info):
         im_id_list = self.get_im_id_list()
