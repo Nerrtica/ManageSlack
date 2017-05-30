@@ -187,6 +187,8 @@ class FactBot:
             return None
         if 'bot_id' in message_json.keys():
             return None
+        if message_json.get('text', '') == '':
+            return None
 
         if message_json.get('text', '')[:8] == 'factbot ':
             full_command = message_json.get('text', '')[8:]
@@ -202,6 +204,8 @@ class FactBot:
         if 'subtype' in message_json.keys():
             return False
         if 'bot_id' in message_json.keys():
+            return False
+        if message_json.get('text', '') == '':
             return False
         if message_json.get('text', '')[0] == '!' \
                 and message_json.get('text', '')[1:].replace(' ', '') in self.keywords.keys():
