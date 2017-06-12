@@ -95,7 +95,7 @@ def list_files(before_n_days=30, user_id='', file_type='images', exclude_starred
 
 if __name__ == '__main__':
     if nickname != '':
-        user_id = check_id(nickname)
+        user_id = check_id(nickname, get_user_list())
     else:
         user_id = ''
 
