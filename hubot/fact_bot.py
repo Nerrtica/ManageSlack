@@ -6,6 +6,7 @@ import random
 import datetime
 import asyncio
 import websockets
+from slacker import Error
 from slacker import Slacker
 from collections import defaultdict
 
@@ -72,7 +73,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.2'
+        self.version = '1.4.3'
 
     def run(self):
         async def execute_bot():
@@ -138,7 +139,7 @@ class FactBot:
                         command_info = self.commands.get_command(full_command)
                         if command_info.get('is_command', False):
                             self.react_command(message_json, command_info, day)
-                        continue
+                            continue
 
                     if self.is_keyword(message_json):
                         keyword = message_json.get('text')[1:].replace(' ', '')
@@ -309,7 +310,11 @@ class FactBot:
 
         elif main_command == 'echo':
             answer = command_info.get('contents')
-            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            try:
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+            except Error:
+                answer = '절 테스트하시려는 건가요? 그런 얕은 수에는 넘어가지 않아요.'
+                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
     def react_admin_command(self, message_json, command_info, day):
         main_command = command_info.get('main_command')
