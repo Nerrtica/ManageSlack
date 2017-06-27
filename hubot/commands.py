@@ -13,7 +13,7 @@ class Commands:
         self.load()
 
     def get_command(self, full_command):
-        full_command = full_command.split(' ')
+        full_command = [command for command in full_command.split(' ') if command]
         main_command = full_command[0]
         main_command_idx = self.get_main_command_index(main_command)
         if main_command_idx == -1:

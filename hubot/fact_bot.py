@@ -73,7 +73,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.3'
+        self.version = '1.4.4'
 
     def run(self):
         async def execute_bot():
@@ -133,8 +133,9 @@ class FactBot:
                         # Admin Command Message
                         admin_command_info = self.admin_commands.get_command(full_command)
                         if admin_command_info.get('is_command', False) and message_json.get('user') == self.admin_id:
-                            self.react_admin_command(message_json, admin_command_info, day)
-                            continue
+                            done = self.react_admin_command(message_json, admin_command_info, day)
+                            if done:
+                                continue
                         # Command Message
                         command_info = self.commands.get_command(full_command)
                         if command_info.get('is_command', False):
@@ -322,12 +323,15 @@ class FactBot:
         if main_command == 'admin':
             if command_info.get('sub_command') == 'help':
                 self.print_admin_help(message_json, command_info)
+                return True
 
         elif main_command == 'kill':
             self.status = self.DIE
+            return True
 
         elif main_command == 'restart':
             self.status = self.RESTART
+            return True
 
         elif main_command == 'save':
             if command_info.get('contents', '') != '':
@@ -336,6 +340,7 @@ class FactBot:
             self.save_statistics_counts(day)
             answer = '%s 카운트 저장 완료' % day
             self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_id), answer, as_user=True)
+            return True
 
         elif main_command == 'load':
             if command_info.get('contents', '') != '':
@@ -344,6 +349,7 @@ class FactBot:
             self.statistics_dict = self.get_statistics_counts(day)
             answer = '%s 카운트 로드 완료' % day
             self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_id), answer, as_user=True)
+            return True
 
         elif main_command == 'crawl':
             if command_info.get('contents', '') != '':
@@ -353,16 +359,20 @@ class FactBot:
             self.get_past_count_history(day)
             answer = '%s 카운트 크롤링 완료' % day
             self.slacker.chat.post_message(message_json.get('channel', self.notice_channel_id), answer, as_user=True)
+            return True
 
         elif main_command == 'print':
             if command_info.get('sub_command') == 'slacking':
                 self.print_slacking()
+                return True
 
         elif main_command == 'echo':
             contents = command_info.get('contents')
             channel_id = contents.split(' ')[0][2:contents.find('|')]
             if channel_id in self.get_channel_id_list():
                 self.slacker.chat.post_message(channel_id, ' '.join(contents.split(' ')[1:]), as_user=True)
+                return True
+        return False
 
     def print_help(self, message_json, command_info):
         if command_info.get('contents', '') == '':
