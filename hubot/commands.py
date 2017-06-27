@@ -17,7 +17,8 @@ class Commands:
         main_command = full_command[0]
         main_command_idx = self.get_main_command_index(main_command)
         if main_command_idx == -1:
-            return {'is_command': False}
+            main_command_candidates = self.get_main_command_candidates(main_command)
+            return {'is_command': False, 'main_command_candidates': main_command_candidates}
         # main command만 입력됨
         if len(full_command) == 1:
             sub_command_idx = self.get_sub_command_index(main_command_idx, 'None')
@@ -25,9 +26,9 @@ class Commands:
                 for idx in sub_command_idx:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] == 'None':
                         return {'is_command': True, 'main_command': main_command}
-                return {'is_command': False}
+                return {'is_command': False, 'main_command': main_command}
             else:
-                return {'is_command': False}
+                return {'is_command': False, 'main_command': main_command}
         # main command와 sub command, 혹은 main command와 contents만 입력됨
         elif len(full_command) == 2:
             extra_command = full_command[1]
@@ -36,12 +37,12 @@ class Commands:
                 for sub_command_idx in self.get_sub_command_index(main_command_idx, 'None'):
                     if self.commands[main_command_idx]['sub_info'][sub_command_idx]['contents'] != 'None':
                         return {'is_command': True, 'main_command': main_command, 'contents': extra_command}
-                return {'is_command': False}
+                return {'is_command': False, 'main_command': main_command}
             else:
                 for idx in extra_command_idx:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] == 'None':
                         return {'is_command': True, 'main_command': main_command, 'sub_command': extra_command}
-                return {'is_command': False}
+                return {'is_command': False, 'main_command': main_command}
         # main command, sub command, contents가 모두 입력되거나 main command와 contents가 입력됨
         elif len(full_command) == 3:
             sub_command = full_command[1]
@@ -52,13 +53,13 @@ class Commands:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
                         return {'is_command': True, 'main_command': main_command,
                                 'contents': ' '.join(full_command[1:])}
-                return {'is_command': False}
+                return {'is_command': False, 'main_command': main_command}
             else:
                 for idx in sub_command_idx:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
                         return {'is_command': True, 'main_command': main_command,
                                 'sub_command': sub_command, 'contents': contents}
-                return {'is_command': False}
+                return {'is_command': False, 'main_command': main_command}
         # main command와 띄어쓰기를 포함한 contents가 입력됨
         else:
             sub_command = full_command[1]
@@ -70,22 +71,30 @@ class Commands:
                     for idx in sub_command_idx:
                         if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
                             return {'is_command': True, 'main_command': main_command, 'contents': contents}
-                    return {'is_command': False}
+                    return {'is_command': False, 'main_command': main_command}
                 else:
-                    return {'is_command': False}
+                    return {'is_command': False, 'main_command': main_command}
             else:
                 contents = ' '.join(full_command[2:])
                 for idx in sub_command_idx:
                     if self.commands[main_command_idx]['sub_info'][idx]['contents'] != 'None':
                         return {'is_command': True, 'main_command': main_command,
                                 'sub_command': sub_command, 'contents': contents}
-                return {'is_command': False}
+                return {'is_command': False, 'main_command': main_command}
 
     def get_main_command_index(self, main_command):
         for i, command in enumerate(self.commands):
             if command['main_command'] == main_command:
                 return i
         return -1
+
+    def get_main_command_candidates(self, main_command):
+        candidates = []
+        for command in self.commands:
+            if len(set(command['main_command']) & set(main_command)) >= len(command['main_command']) - 2:
+                candidates.append(command['main_command'])
+            # TODO: 글자 입력 순서를 고려한 체크
+        return candidates
 
     def get_sub_command_index(self, main_idx, sub_command):
         common_idx = []

@@ -73,7 +73,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.4'
+        self.version = '1.4.5'
 
     def run(self):
         async def execute_bot():
@@ -141,6 +141,19 @@ class FactBot:
                         if command_info.get('is_command', False):
                             self.react_command(message_json, command_info, day)
                             continue
+                        else:
+                            if len(command_info.get('main_command_candidates', [])) != 0:
+                                answer = '혹시 이 명령어를 쓰려고 하셨나요? `%s`' % \
+                                         ', '.join(command_info['main_command_candidates'])
+                                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id),
+                                                               answer, as_user=True)
+                                continue
+                            elif command_info.get('main_command', None):
+                                answer = '명령어의 사용법이 틀린 것 같아요. :cry:'
+                                self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id),
+                                                               answer, as_user=True)
+                                self.print_help(message_json, {'contents': command_info['main_command']})
+                                continue
 
                     if self.is_keyword(message_json):
                         keyword = message_json.get('text')[1:].replace(' ', '')
