@@ -14,11 +14,11 @@ contents : None
 
 main_command : count
 sub_command : start
-description : 명령어 사용 당사자를 count하기 시작합니다.
+description : 명령어 사용 당사자의 슬랙 사용량을 카운트하기 시작합니다.
 contents : None
 
 sub_command : stop
-description : 명령어 사용 당사자를 더 이상 count하지 않습니다.
+description : 명령어 사용 당사자의 슬랙 사용량을 더 이상 카운트하지 않습니다.
 contents : None
 
 main_command : mute
@@ -62,15 +62,15 @@ contents : <keyword> / <sentence>
 
 main_command : kingname
 sub_command : set
-description : 명령어 사용 채널의 슬랙왕 호칭을 설정합니다.
+description : 명령어 사용 채널의 오늘의 슬랙왕 호칭을 설정합니다.
 contents : <slacking name>
 
 sub_command : init
-description : 명령어 사용 채널의 슬랙왕 호칭을 초기화합니다.
+description : 명령어 사용 채널의 오늘의 슬랙왕 호칭을 초기화합니다.
 contents : None
 
 sub_command : show
-description : 명령어 사용 채널의 슬랙왕 호칭을 확인합니다.
+description : 명령어 사용 채널의 오늘의 슬랙왕 호칭을 확인합니다.
 contents : None
 
 main_command : version
