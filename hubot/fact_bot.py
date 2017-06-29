@@ -52,7 +52,7 @@ class FactBot:
         try:
             with open(self.default_path+'data/kingname_alias.txt', 'r', encoding='utf-8') as f:
                 for line in f.readlines():
-                    line = line.strip().split()
+                    line = line.strip().split(maxsplit=1)
                     self.kingname_alias[line[0]] = line[1]
         except FileNotFoundError:
             pass
