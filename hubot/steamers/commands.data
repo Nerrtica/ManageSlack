@@ -61,8 +61,12 @@ description : 해당 키워드에 반응하여 팩트봇이 하는 말의 리스
 contents : <keyword>
 
 sub_command : delete
-description : 해당 키워드에 더 이상 팩트봇이 반응하지 않습니다.
+description : 해당 키워드에 더 이상 팩트봇이 해당 말로 반응하지 않습니다.
 contents : <keyword> / <sentence>
+
+sub_command : format
+description : 해당 키워드에 반응하는 팩트봇의 말을 모두 삭제합니다.
+contents : <keyword>
 
 main_command : kingname
 sub_command : set

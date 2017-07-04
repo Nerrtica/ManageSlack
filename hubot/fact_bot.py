@@ -73,7 +73,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.7'
+        self.version = '1.4.8'
 
     def run(self):
         async def execute_bot():
@@ -283,7 +283,7 @@ class FactBot:
 
         elif main_command == 'keyword':
             sub_command = command_info.get('sub_command')
-            if sub_command == 'add' or sub_command == 'delete':
+            if sub_command == 'add' or sub_command == 'delete' or sub_command == 'format':
                 self.manage_keyword(message_json, command_info)
             elif sub_command == 'show':
                 keyword = command_info.get('contents')
@@ -672,31 +672,39 @@ class FactBot:
         return True
 
     def manage_keyword(self, message_json, command_info):
-        contents = command_info.get('contents').split(' / ')
-        if len(contents) > 2:
-            contents[1] = ' / '.join(contents[1:])
-            del contents[2:]
-        if len(contents) != 2:
-            answer = '제대로 된 포맷으로 입력해주세요. <keyword> / <sentence>'
-        else:
-            keyword = contents[0]
-            reply = contents[1]
-
-            sub_command = command_info.get('sub_command')
-            if sub_command == 'add':
-                self.keywords[keyword.replace(' ', '').lower()].add(reply)
-                answer = '%s 키워드에 %s 리액션을 추가했어요.' % (keyword, reply)
-            elif sub_command == 'delete':
-                if keyword.replace(' ', '').lower() not in self.keywords.keys():
-                    answer = '%s 키워드에 대한 리액션이 존재하지 않아요.' % keyword
-                else:
-                    try:
-                        self.keywords[keyword.replace(' ', '').lower()].remove(reply)
-                        answer = '%s 키워드에 대한 %s 리액션을 삭제했어요.' % (keyword, reply)
-                    except KeyError:
-                        answer = '%s 키워드에 대한 %s 리액션이 존재하지 않아요.' % (keyword, reply)
+        if command_info.get('sub_command', '') == 'format':
+            keyword = command_info.get('contents')
+            if keyword.replace(' ', '').lower() not in self.keywords.keys():
+                answer = '%s 키워드의 리액션이 이미 존재하지 않아요.' % keyword
             else:
-                return
+                del self.keywords[keyword.replace(' ', '').lower()]
+                answer = '%s 키워드의 모든 리액션을 삭제했어요.' % keyword
+        else:
+            contents = command_info.get('contents').split(' / ')
+            if len(contents) > 2:
+                contents[1] = ' / '.join(contents[1:])
+                del contents[2:]
+            if len(contents) != 2:
+                answer = '제대로 된 포맷으로 입력해주세요. <keyword> / <sentence>'
+            else:
+                keyword = contents[0]
+                reply = contents[1]
+
+                sub_command = command_info.get('sub_command')
+                if sub_command == 'add':
+                    self.keywords[keyword.replace(' ', '').lower()].add(reply)
+                    answer = '%s 키워드에 %s 리액션을 추가했어요.' % (keyword, reply)
+                elif sub_command == 'delete':
+                    if keyword.replace(' ', '').lower() not in self.keywords.keys():
+                        answer = '%s 키워드에 대한 리액션이 존재하지 않아요.' % keyword
+                    else:
+                        try:
+                            self.keywords[keyword.replace(' ', '').lower()].remove(reply)
+                            answer = '%s 키워드에 대한 %s 리액션을 삭제했어요.' % (keyword, reply)
+                        except KeyError:
+                            answer = '%s 키워드에 대한 %s 리액션이 존재하지 않아요.' % (keyword, reply)
+                else:
+                    return
 
         with open(self.default_path+'data/keyword_list.txt', 'w', encoding='utf-8') as f:
             for keyword, replies in self.keywords.items():
