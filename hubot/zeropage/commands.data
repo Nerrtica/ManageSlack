@@ -86,6 +86,11 @@ sub_command : None
 description : factbot의 현재 버전을 출력합니다.
 contents : None
 
+main_command : spank
+sub_command : None
+description : 아파요 엉엉
+contents : None
+
 main_command : die
 sub_command : None
 description : 네?

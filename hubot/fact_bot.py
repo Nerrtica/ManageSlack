@@ -63,10 +63,13 @@ class FactBot:
         self.commands = Commands(self.default_path+'commands.data')
         self.admin_commands = Commands(self.default_path+'admin_commands.data')
         self.hello_message = 'Factbot Start running!'
-        self.error_message = 'Error Error <@nerrtica>'
-        self.stop_message = 'Too many Error... <@nerrtica>'
+        self.error_message = 'Error Error <@%s>' % self.admin_id
+        self.stop_message = 'Too many Error... <@%s>' % self.admin_id
         self.kill_message = 'Bye Bye!'
-        self.die_messages = [':innocent: :gun:', '으앙듀금', '꿲', '영웅은 죽지않아요']
+        self.spank_messages = ['아얏 아얏', '때리지 마세요', '아파요...', '<@%s> 엄마 누가 저 때렸어요 ㅠㅠ' % self.admin_id,
+                               '저를 때려서 당신의 스트레스가 풀린다면...\n\n...하지 마세요 아야!']
+        self.die_messages = [':innocent::gun:', '으앙듀금', '꿲', '영웅은 죽지않아요', '빵야빵야!',
+                             ':overwatch_reaper: 쥬그미,, 너으 곁을 걷는다아...']
 
         self.ALIVE = 0
         self.RESTART = 1
@@ -313,6 +316,10 @@ class FactBot:
                 else:
                     answer = '아직 <#%s> 채널의 슬랙왕 호칭이 없어요.' % (message_json.get('channel'))
                 self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+
+        elif main_command == 'spank':
+            answer = self.spank_messages[random.randrange(len(self.spank_messages))]
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         elif main_command == 'die':
             answer = self.die_messages[random.randrange(len(self.die_messages))]
