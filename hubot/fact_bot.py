@@ -73,7 +73,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.5'
+        self.version = '1.4.6'
 
     def run(self):
         async def execute_bot():
@@ -388,7 +388,7 @@ class FactBot:
         return False
 
     def print_help(self, message_json, command_info):
-        if command_info.get('contents', '') == '':
+        if command_info.get('sub_command', '') == 'all':
             answer = '※ factbot을 사용하기 위해서는 각 채널에 초대를 하시기 바랍니다.\n\n'
             answer += 'factbot은 각 채널 별로 매일 가장 슬랙 사용량이 높은 유저를 슬랙왕으로 추대합니다 :innocent: \n'
             answer += '사용량 통계는 *사용자별, 날짜별 메시지 count* 로만 추정하며, 지난 정보 저장을 위해 로컬에 파일로 저장됩니다.'
@@ -410,6 +410,19 @@ class FactBot:
 
             answer = '기능 추가 및 버그 수정은 GitHub Repository에 Pull Request로 보내주시기 바랍니다.\n'
             answer += 'Repository : https://github.com/Nerrtica/ManageSlack'
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+
+        elif command_info.get('contents', '') == '':
+            answer = '제가 할 수 있는 일들이에요!\n'
+            answer += '`%s`' % ', '.join([c['main_command'] for c in self.commands.commands])
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+
+            answer = '각 명령어의 사용법을 자세히 알고 싶다면 `factbot help <command>` 명령어를 입력해주세요!\n'
+            answer += '모든 명령어의 사용법을 자세히 알고 싶다면 `factbot help all` 명령어를 입력해주세요! ' \
+                      '(말을 많이 해야하니까, *DM 혹은 <#%s> 에서 사용* 하는 걸 추천해요)' % self.bot_channel_id
+            self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
+
+            answer = '기능 추가나 버그 수정은 https://github.com/Nerrtica/ManageSlack 에 이슈 혹은 풀리퀘로 보내주세요 :hugging_face:'
             self.slacker.chat.post_message(message_json.get('channel', self.bot_channel_id), answer, as_user=True)
 
         else:

@@ -3,6 +3,10 @@ sub_command : None
 description : 헬푸미
 contents : None
 
+sub_command : all
+description : 좀 더 자세히 알려주세여
+contents : None
+
 sub_command : None
 description : 왓츠 디스 명령어?
 contents : <command>
