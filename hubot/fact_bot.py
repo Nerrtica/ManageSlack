@@ -76,7 +76,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.8'
+        self.version = '1.4.9'
 
     def run(self):
         async def execute_bot():
@@ -292,7 +292,7 @@ class FactBot:
                 keyword = command_info.get('contents')
                 replies = self.keywords.get(keyword.replace(' ', '').lower(), [])
                 if len(replies) == 0:
-                    answer = '%s 키워드에 대한 리액션이 존재하지 않아요.' % keyword
+                    answer = '< *%s* > 키워드에 대한 리액션이 존재하지 않아요.' % keyword
                 else:
                     answer = ''
                     for i, reply in enumerate(replies):
@@ -682,10 +682,10 @@ class FactBot:
         if command_info.get('sub_command', '') == 'format':
             keyword = command_info.get('contents')
             if keyword.replace(' ', '').lower() not in self.keywords.keys():
-                answer = '%s 키워드의 리액션이 이미 존재하지 않아요.' % keyword
+                answer = '< *%s* > 키워드의 리액션이 이미 존재하지 않아요.' % keyword
             else:
                 del self.keywords[keyword.replace(' ', '').lower()]
-                answer = '%s 키워드의 모든 리액션을 삭제했어요.' % keyword
+                answer = '< *%s* > 키워드의 모든 리액션을 삭제했어요.' % keyword
         else:
             contents = command_info.get('contents').split(' / ')
             if len(contents) > 2:
@@ -700,16 +700,16 @@ class FactBot:
                 sub_command = command_info.get('sub_command')
                 if sub_command == 'add':
                     self.keywords[keyword.replace(' ', '').lower()].add(reply)
-                    answer = '%s 키워드에 %s 리액션을 추가했어요.' % (keyword, reply)
+                    answer = '< *%s* > 키워드에 < *%s* > 리액션을 추가했어요.' % (keyword, reply)
                 elif sub_command == 'delete':
                     if keyword.replace(' ', '').lower() not in self.keywords.keys():
-                        answer = '%s 키워드에 대한 리액션이 존재하지 않아요.' % keyword
+                        answer = '< *%s* > 키워드에 대한 리액션이 존재하지 않아요.' % keyword
                     else:
                         try:
                             self.keywords[keyword.replace(' ', '').lower()].remove(reply)
-                            answer = '%s 키워드에 대한 %s 리액션을 삭제했어요.' % (keyword, reply)
+                            answer = '< *%s* > 키워드에 대한 < *%s* > 리액션을 삭제했어요.' % (keyword, reply)
                         except KeyError:
-                            answer = '%s 키워드에 대한 %s 리액션이 존재하지 않아요.' % (keyword, reply)
+                            answer = '< *%s* > 키워드에 대한 < *%s* > 리액션이 존재하지 않아요.' % (keyword, reply)
                 else:
                     return
 
