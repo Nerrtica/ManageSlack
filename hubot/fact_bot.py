@@ -10,7 +10,7 @@ from slacker import Error
 from slacker import Slacker
 from collections import defaultdict
 
-from commands import Commands
+from hubot.commands import Commands
 
 
 class FactBot:
@@ -76,7 +76,7 @@ class FactBot:
         self.DIE = 2
         self.status = self.ALIVE
 
-        self.version = '1.4.9'
+        self.version = '1.4.10'
 
     def run(self):
         async def execute_bot():
