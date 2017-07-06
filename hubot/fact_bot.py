@@ -10,7 +10,7 @@ from slacker import Error
 from slacker import Slacker
 from collections import defaultdict
 
-from hubot.commands import Commands
+from commands import Commands
 
 
 class FactBot:
